@@ -18,13 +18,11 @@ class FrequentlyAskedQuestions(commands.Cog):
 
         return
 
-    help_group = SlashCommandGroup("help","Bot Documentation")
+    help_group = SlashCommandGroup(name = "help", description = "Help Commands for the bot")
 
-    @help_group.command("help")     #   type: ignore
-    async def faq_main(self, ctx:ApplicationContext, arg:Optional[str]):
-
-
-        if not arg: arg = str(arg)
+    @help_group.command(name = "command_list", description="Available bot commands")     #   type: ignore
+    async def modules(self, ctx:ApplicationContext, module_name:Optional[str] = "None"):
+        if not module_name: module_name = str(module_name)
         
         cmd = ctx.command.name if ctx.command else "help" #   type: ignore
     
@@ -36,7 +34,7 @@ class FrequentlyAskedQuestions(commands.Cog):
         
         self.base_embed.add_field(name = "Forum Moderation Module", value = " List of available forum moderation commands.")
 
-        match arg.lower():
+        match module_name.lower():
             case "forum moderator module": self.embed = self.forum_moderation_module(ctx)
             case "moderator module": self.embed = self.forum_moderation_module(ctx)
             case "administrator module": self.embed = self.administration_module(ctx)
