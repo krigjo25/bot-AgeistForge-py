@@ -2,17 +2,17 @@ from os import getenv
 from dotenv import load_dotenv
 
 #    Custom library
-from model.system.botSetup import DiscordSetup
+from lib.system.botSetup import DiscordSetup
 
 load_dotenv()
 
 def RunBot ():
 
     disc = DiscordSetup()
-    disc.SystemSetup()
-    disc.ModerationSetup()
+    disc.system_setup()
+    #disc.moderation_setup()
 
-    disc.bot.run(getenv('Token'))
+    disc.bot.run(getenv('DISCORD_BOT_TOKEN'))
 
 if __name__ == '__main__':
         RunBot()

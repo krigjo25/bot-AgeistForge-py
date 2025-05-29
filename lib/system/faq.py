@@ -18,12 +18,11 @@ class FrequentlyAskedQuestions(commands.Cog):
 
         return
 
-    help_group = SlashCommandGroup("help","Bot Documentation")
+    help_group = SlashCommandGroup(name = "help", description = "Bot Documentation")
 
-    @help_group.command("help")     #   type: ignore
+    @help_group.command(name = "help", description="Available help commands")     #   type: ignore
     async def faq_main(self, ctx:ApplicationContext, arg:Optional[str]):
-
-
+        print("[FAQ] - Help command invoked")
         if not arg: arg = str(arg)
         
         cmd = ctx.command.name if ctx.command else "help" #   type: ignore
