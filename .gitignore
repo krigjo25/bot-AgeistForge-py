@@ -1,2 +1,8 @@
+
+#   Ignore Folders
+__pycache__/
+.venv/
+.logs/
+#   Ignore Files
 .env
 .venv
