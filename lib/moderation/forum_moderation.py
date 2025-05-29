@@ -215,7 +215,7 @@ class RoleModeration(commands.Cog):
 
         return
 
-class ChannelModeration(Cog):
+class ChannelModeration(commands.Cog):
 
     """
         Commands for Moderators with manage_channels & manage_messages
