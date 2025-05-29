@@ -12,8 +12,8 @@ from discord.ext import  commands
 from discord.embeds import Embed, Colour
 from discord import utils, Option, ApplicationContext, SlashCommandGroup, Permissions, Member
 
-from utils.logger_config import AdminWatcher
-from utils.exception_handler import NotFoundError
+from lib.utils.logger_config import AdminWatcher
+from lib.utils.exception_handler import NotFoundError
 
 logger = AdminWatcher(name="administrator-module", dir=".logs")
 logger.file_handler()
@@ -27,11 +27,11 @@ class Administrator(commands.Cog):
 
     admin_group = SlashCommandGroup(name = "ban", description = "Server Administrator", default_member_permissions = Permissions(administrator = True))
 
-    @admin_group.before_invoke
+    @admin_group.before_invoke #   type: ignore
     async def CheckModChannel(self, ctx:ApplicationContext):
         pass
 
-    @admin_group.after_invoke       
+    @admin_group.after_invoke #   type: ignore
     async def admin_command_after(self, ctx:ApplicationContext):
 
         
@@ -166,10 +166,18 @@ class Administrator(commands.Cog):
         return
 
     @admin_group.command()  #   type: ignore
-    async def aduit_log(self, ctx:ApplicationContext): 
-    
-        #   Read the Server's Audit Log
-        pass 
+    @commands.is_owner()    #   type: ignore 
+    async def shutdown_bot(self, ctx:ApplicationContext): 
+
+        await ctx.defer(ephemeral=True)  #   type: ignore
+
+        await ctx.send("Initiating bot restart...", ephemeral=True) #   type: ignore
+        logger.critical(f"'{ctx.author}' initiated self destruct butten !")
+
+        # This will gracefully disconnect the bot from Discord.
+        # Once disconnected, the Python script will exit.
+        await self.bot.close()
+
 
     @admin_group.command()  #   type: ignore
     async def server_analysis(self, ctx:ApplicationContext): 
