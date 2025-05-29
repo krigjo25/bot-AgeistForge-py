@@ -1,13 +1,16 @@
 
 #   Discord Repositories
-import discord as d
+import discord
 from typing import Optional
 from discord import Color
 
 from discord.embeds import Embed
 from discord.ext import commands
-from discord.commands import SlashCommandGroup, ApplicationContext
+from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
+from lib.utils.logger_config import CommandWatcher
+logger = CommandWatcher(name="FAQ", dir=".logs") #   type: ignore
+logger.file_handler()
 #   Copyright (C) 2023  Kristoffer Gjøsund
 
 class FrequentlyAskedQuestions(commands.Cog):
@@ -20,9 +23,18 @@ class FrequentlyAskedQuestions(commands.Cog):
 
     help_group = SlashCommandGroup(name = "help", description = "Bot Documentation")
 
-    @help_group.command(name = "help", description="Available help commands")     #   type: ignore
-    async def faq_main(self, ctx:ApplicationContext, arg:Optional[str]):
-        print("[FAQ] - Help command invoked")
+
+    @help_group.command(name = "modules", description="Bot command menu")     #   type: ignore
+    async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False, default="")): #   type: ignore
+        """
+            Displays a list of available commands and modules.
+            Use the command `/help <module>` to get help on a specific module.
+            Otherwise `/help` will return a list of all available modules.
+        """
+
+        logger.info("[FAQ] - Help command invoked")
+
+
         if not arg: arg = str(arg)
         
         cmd = ctx.command.name if ctx.command else "help" #   type: ignore
@@ -42,13 +54,13 @@ class FrequentlyAskedQuestions(commands.Cog):
             case _:
 
                 match (ctx.author.guild_permissions): #   type: ignore
-                    case d.Permissions(ban_members=True):   self.base_embed.add_field(name=f'Forum Moderator Module', value="List of available forum moderation commands.")
-                    case d.Permissions(kick_members=True):  self.base_embed.add_field(name=f'Moderator Module', value="List of available moderation commands.", inline=True)
-                    case d.Permissions(administrator=True):   self.base_embed.add_field(name=f'Administrator Module', value="List of administration commands available to administrators.")
+                    case discord.Permissions(ban_members=True):   self.base_embed.add_field(name=f'Forum Moderator Module', value="List of available forum moderation commands.")
+                    case discord.Permissions(kick_members=True):  self.base_embed.add_field(name=f'Moderator Module', value="List of available moderation commands.", inline=True)
+                    case discord.Permissions(administrator=True):   self.base_embed.add_field(name=f'Administrator Module', value="List of administration commands available to administrators.")
 
-        ctx.send(embed = self.base_embed) #   type: ignore
+        await ctx.send(embed = self.base_embed) #   type: ignore
 
-    def forum_moderation_module(self, ctx:d.ApplicationContext):
+    def forum_moderation_module(self, ctx:discord.ApplicationContext):
 
         self.base_embed.title = 'Moderator Module'
         self.base_embed.color = Color.dark_purple()
@@ -67,7 +79,7 @@ class FrequentlyAskedQuestions(commands.Cog):
         if ctx.author.guild_permissions.moderate_members: pass  #   type: ignore
         return self.base_embed
     
-    def moderation_module(self, ctx:d.ApplicationContext):
+    def moderation_module(self, ctx:discord.ApplicationContext):
 
         self.base_embed.title = 'Moderator Module'
         self.base_embed.color = Color.dark_purple()
@@ -77,7 +89,7 @@ class FrequentlyAskedQuestions(commands.Cog):
             case d.Permissions(kick_members=True):  self.base_embed.add_field(name=f'/kick', value='- Kicks a user from the server', inline=True)
             case d.Permissions(manage_messages=True):self.base_embed.add_field(name=f'/clear', value='- Clears messages in a channel', inline=True)
 
-    async def administration_module(self, ctx:d.ApplicationContext): 
+    async def administration_module(self, ctx:discord.ApplicationContext): 
         #   Initializing analysis commands
         #   Initializing auditlog commands
         return
