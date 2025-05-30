@@ -64,13 +64,12 @@ class MemberModeration(commands.Cog):
         
         mod_utils = ModerationUtils(self.bot)
         try:
-            if member == ctx.author: raise SelfReferenceError(400,"Could not sush your self.")
-            elif len(time) != 2: raise ExceptionHandler(400,f"Please indicate the time using '{time}s', '{time}m', '{time}h' or '{time}d'")                                  #   type: ignore
-            elif int(time[0]) > 604800: raise InvalidDurationError(400, f" Could not sush **{member}** due to a limitation for 1w, please consider other consequences.")    #   type: ignore
+            if member == ctx.author: raise SelfReferenceError("Could not sush your self.", 400)
+            elif len(time) != 2: raise ExceptionHandler(f"Please indicate the time using '{time}s', '{time}m', '{time}h' or '{time}d'")                                  #   type: ignore
+            elif int(time[0]) > 604800: raise InvalidDurationError(f" Could not sush **{member}** due to a limitation for 1w, please consider other consequences.")    #   type: ignore
 
         except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError) as e: 
-            await mod_utils.create_error_entry(ctx, e)  #   type: ignore
-
+            #await mod_utils.create_error_entry(ctx, e)  #   type: ignore
             return
 
         else:
@@ -85,7 +84,7 @@ class MemberModeration(commands.Cog):
             await ctx.respond("Command executed.")                                                                  #   type: ignore
         return
 
-    '''@member.command(name = "lift", description="Lift a community member curse")   #   type: ignore
+    @member.command(name = "lift", description="Lift a community member curse")   #   type: ignore
     async def lift(self, ctx:ApplicationContext, member:Member):
 
         await self.create_log_entry(ctx, member, "unmuted")  #   type: ignore
@@ -97,13 +96,13 @@ class MemberModeration(commands.Cog):
             await self.create_log_entry(ctx, member, ctx.command.name)      #   type: ignore
             await self.send_member_message(ctx, member, ctx.command.name)   #   type: ignore
             await ctx.respond("Command executed.")                                  #   type: ignore
-'''
+
     @member.command(name = "kick", description="Kick a community member")   #   type: ignore
     async def kick(self, ctx:ApplicationContext, member:Member, *, reason:Option(str, "Provide A reason to kick the member", required = True)):
 
         mod_utils = ModerationUtils(self.bot)
-        try : pass
-            #if member == ctx.author: raise SelfReferenceError("Can not kick your self")
+        try :
+            if member == ctx.author: raise SelfReferenceError("Can not kick your self")
             
         except (SelfReferenceError, Forbidden) as e :
 
@@ -117,7 +116,7 @@ class MemberModeration(commands.Cog):
 
             await member.kick(reason=reason)                                                #   type: ignore
 
-    @member.command(name= "announce", description="Make an announcement to the community")  #   type: ignore
+    '''@member.command(name= "announce", description="Make an announcement to the community")  #   type: ignore
     async def announcement(self, ctx:ApplicationContext):
 
         """
@@ -125,7 +124,7 @@ class MemberModeration(commands.Cog):
 
         """
         modal = Channel(title = "Channel Announcement")
-        await ctx.send_modal(modal)
+        await ctx.send_modal(modal)'''
 
     @member.after_invoke                            #   type: ignore
     async def clear_memory(self, ctx:ApplicationContext):

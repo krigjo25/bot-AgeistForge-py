@@ -9,7 +9,7 @@ from lib.utils.error_handler import ErrorHandler
 from lib.system.faq import FrequentlyAskedQuestions
 
 #   Moderation Utility
-from lib.moderation.moderation import MemberModeration
+from lib.moderation.member_moderation import MemberModeration
 from lib.moderation.administrator import Administrator
 from lib.moderation.forum_moderation import ChannelModeration, RoleModeration
 

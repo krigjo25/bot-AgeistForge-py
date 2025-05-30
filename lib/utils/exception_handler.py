@@ -5,7 +5,7 @@ from typing import Optional
 class ExceptionHandler(Exception):
     """ Base class for all exceptions """
 
-    def __init__(self, message:Optional[str] = None, code:int = 400,):
+    def __init__(self, message:Optional[str] = None, code:int = 400):
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else "An error occurred"
