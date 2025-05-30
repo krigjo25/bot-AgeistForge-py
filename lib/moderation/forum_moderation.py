@@ -5,8 +5,8 @@ import humanfriendly as hf
 
 #   Discord Repositories
 import discord as d
-from discord import utils
-from discord.embeds import Embed, Colour
+from discord import utils, Colour
+from discord.embeds import Embed
 from discord.ext import  commands
 
 class RoleModeration(commands.Cog):
@@ -36,124 +36,7 @@ class RoleModeration(commands.Cog):
     #   Slash command group
     role = d.SlashCommandGroup(name = "role", description = "Role mananger", default_member_permissions = d.Permissions(manage_roles = True))
 
-    #@role.commend()
-    async def create(): pass
-
-    @role.command() # delete a role
-    async def delete(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True) ):
-
-        """
-            Delete a server role
-            #
-            #   Checking if there is any channels called 'moderationlog'
-            #   Ask the user for comfirmation before removing the role
-
-        """
-
-        await self.check_channel(ctx)# Calling the function manually
-        #   Fetch role and channel
-        role = utils.get(ctx.guild.roles, name= role)#  Fetch role
-        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
-
-        try:
-            if not role : raise Exception(f"Could not find \"**{role}**\" in the server")
-            elif not ch : raise Exception("The channel \"**auditlog**\" were not created")
-
-        except Exception as e:
-
-            self.embed.title = "An Exception Occured"
-            self.embed.description = f'{e}, Try again...'
-            await ctx.send(embed = self.embed)
-
-            del role, ch#   Clear some memory
-            return
-
-        else:   #   Confirming the deletion
-            modal = Role(title = "Role Deletion")
-            ctx.send_modal(modal)
-
-        del role, ch, modal
-
-        return
- 
-    @role.command()# remove a member from a role
-    async def remove(self, ctx:d.ApplicationContext, member:d.Member, role:d.Option(str, "Server role", required = True), *, reason:d.Option(str, "Reason to remove the member from the role", required = True)):
-
-        """
-            Removing the member from the selected role
-
-            #   Fetch the role & audit channel
-            #   Checking if there is any channels called 'auditlog'
-            #   When the command is invoked, ask the user for a confirmation
-            #   Confirmation to remove the user from the role
-
-        """
-
-        await self.check_channel(ctx)# Calling the function manually
-        role = utils.get(ctx.guild.roles, name=f'{role}')#  Fetch role
-        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
-
-        try: 
-            if not role : raise Exception(f"Role \"{role}\" Not found")
-            if not ch: raise Exception(f"The auditlog channel were not created")
-
-        except Exception as e: 
-
-            self.embed.color = Colour.dark_red()
-            self.embed.title = 'An Exception Occured'
-            self.embed.description = f"{e}, try again."
-            await ctx.send(embed = self.embed)
-            return
-
-        else:
-
-            #  Prepare, remove & send
-            modal = Role(title = "Remove member")
-            ctx.send_modal(modal)
-
-        return
-
-    @role.command() # add someone to a role
-    async def add(self, ctx:d.ApplicationContext, member:d.Member, role:d.Option(str, "Server role", required = True)):
-
-        """
-            Add a member to given role
-
-            #   Fetch role and channel and check if they actually exists
-            #   Except exception if not exists
-            #   add member to role
-        """
-        await self.check_channel(ctx)# Calling the function manually
-        role = utils.get(ctx.guild.roles, name=f'{role}')#  Fetch role
-        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
-
-        try :
-            if not role: raise Exception("Role does not exist")
-            elif not ch: raise Exception("The channeld \"**auditlog**\" were not created")
-
-        except Exception as e:
-
-            self.embed.title = "An Exception Occured"
-            self.embed.description = f"{e}, try again"
-            await ctx.send(embed = self.embed)
-
-            del role, ch, member
-            return
-        else:
-
-            #  Prepare, remove, send & Clean up
-            self.embed.color = Colour.dark_red()
-            self.embed.title = f'{member} has been added to {role} by {ctx.author}'
-
-            await member.add_roles(role)
-            await ch.send(embed = self.embed)
-
-        return
-
-    @role.command()#    Modify permissions, roles
-    async def modify(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True), *, reason = None):  return
-
-    @role.before_invoke
+    @role.before_invoke # type: ignore
     async def check_channel(self, ctx: d.ApplicationContext):
 
         channel = []
@@ -201,7 +84,125 @@ class RoleModeration(commands.Cog):
 
         return
 
-    @role.after_invoke
+    @role.commend(name= "create", description = "Create a new Role") # type: ignore
+    async def create(): pass
+
+    @role.command(name = "delete", describe = "Delete a role")  # type: ignore
+    async def delete(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True) ):
+
+        """
+            Delete a server role
+            #
+            #   Checking if there is any channels called 'moderationlog'
+            #   Ask the user for comfirmation before removing the role
+
+        """
+
+        await self.check_channel(ctx)# Calling the function manually
+        #   Fetch role and channel
+        role = utils.get(ctx.guild.roles, name= role)#  Fetch role
+        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
+
+        try:
+            if not role : raise Exception(f"Could not find \"**{role}**\" in the server")
+            elif not ch : raise Exception("The channel \"**auditlog**\" were not created")
+
+        except Exception as e:
+
+            self.embed.title = "An Exception Occured"
+            self.embed.description = f'{e}, Try again...'
+            await ctx.send(embed = self.embed)
+
+            del role, ch#   Clear some memory
+            return
+
+        else:   #   Confirming the deletion
+            modal = Role(title = "Role Deletion")
+            ctx.send_modal(modal)
+
+        del role, ch, modal
+
+        return
+ 
+    @role.command(name = "remove", description = "Remove a member from a role") # type: ignore
+    async def remove(self, ctx:d.ApplicationContext, member:d.Member, role:d.Option(str, "Server role", required = True), *, reason:d.Option(str, "Reason to remove the member from the role", required = True)):
+
+        """
+            Removing the member from the selected role
+
+            #   Fetch the role & audit channel
+            #   Checking if there is any channels called 'auditlog'
+            #   When the command is invoked, ask the user for a confirmation
+            #   Confirmation to remove the user from the role
+
+        """
+
+        await self.check_channel(ctx)# Calling the function manually
+        role = utils.get(ctx.guild.roles, name=f'{role}')#  Fetch role
+        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
+
+        try: 
+            if not role : raise Exception(f"Role \"{role}\" Not found")
+            if not ch: raise Exception(f"The auditlog channel were not created")
+
+        except Exception as e: 
+
+            self.embed.color = Colour.dark_red()
+            self.embed.title = 'An Exception Occured'
+            self.embed.description = f"{e}, try again."
+            await ctx.send(embed = self.embed)
+            return
+
+        else:
+
+            #  Prepare, remove & send
+            modal = Role(title = "Remove member")
+            ctx.send_modal(modal)
+
+        return
+
+    @role.command( name = "set", description = "Set a member's new role")   # type: ignore
+    async def add(self, ctx:d.ApplicationContext, member:d.Member, role:d.Option(str, "Server role", required = True)):
+
+        """
+            Add a member to given role
+
+            #   Fetch role and channel and check if they actually exists
+            #   Except exception if not exists
+            #   add member to role
+        """
+        await self.check_channel(ctx)# Calling the function manually
+        role = utils.get(ctx.guild.roles, name=f'{role}')#  Fetch role
+        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
+
+        try :
+            if not role: raise Exception("Role does not exist")
+            elif not ch: raise Exception("The channeld \"**auditlog**\" were not created")
+
+        except Exception as e:
+
+            self.embed.title = "An Exception Occured"
+            self.embed.description = f"{e}, try again"
+            await ctx.send(embed = self.embed)
+
+            del role, ch, member
+            return
+        else:
+
+            #  Prepare, remove, send & Clean up
+            self.embed.color = Colour.dark_red()
+            self.embed.title = f'{member} has been added to {role} by {ctx.author}'
+
+            await member.add_roles(role)
+            await ch.send(embed = self.embed)
+
+        return
+
+    @role.command(name = "modify", description = "Modify role permissions") # type: ignore
+    async def modify(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True), *, reason = None):  return
+
+    
+    @role.after_invoke  # type: ignore
     async def clear_memory(self, ctx: d.ApplicationContext):
 
         #   Clear some Memory
@@ -219,14 +220,6 @@ class ChannelModeration(commands.Cog):
 
     """
         Commands for Moderators with manage_channels & manage_messages
-        
-        #   Author : Krigjo25
-        #   Creation Date :  18.02-23
-        #   last update :    20.02-23
-
-        #   Create channels
-        #   Delete channels
-        #   modify channels
     """
 
     def __init__(self, bot):
@@ -238,8 +231,29 @@ class ChannelModeration(commands.Cog):
     
     #   Slash command group
     channel = d.SlashCommandGroup(name = "channel", description = "Create something", default_member_permissions = d.Permissions(manage_channels = True))
+    
+    @channel.before_invoke  # type: ignore
+    async def check_channel(self, ctx:d.ApplicationContext):
 
-    @channel.command()
+        print("test, before_invoke")
+        ch = ["auditlog", "member-reports", "member-support"]
+
+        category = utils.get(ctx.guild.categories, name = "log")
+
+        if not category:
+            category = utils.get(ctx.guild.categories, name = "log")
+            await ctx.guild.create_category(name = "log", reason = "")
+
+        for i in ch:
+            i = utils.get(ctx.guild.channels, name = i)#  Fetch channel
+            if not i: await ctx.channel.create_text_channel(name = i, category = category, reason = "Auto generated channel")
+
+        del ch, i, ctx  #   Clear some memory
+        del category
+
+        return
+
+    @channel.command(name = "create", description = "Create a channel") # type: ignore
     async def create(self, ctx:d.ApplicationContext, channeltype:d.Option(str, "eg. (forum / text / voice / stage)", required = True), name:d.Option(str, "Name of the channel eg. (general-talk, general)", required = True), age_restricted:d.Option(bool, "Is the channel restricted for users below 18? (True / False)", default = False) , bitrate:d.Option(int, "bitrate (voic channel)", required = False, default = 0),  category:d.Option(str, "Name of the category. (GENERAL, GENERAL TALK)", required = False, default = None), delay: d.Option(int,"Slowmode counter(s)", default = 0), user_limit:d.Option(int,"User limitation for the channel (Voice channel parameter)", required = False, default = 0), perm:d.Option(str, "permissions (custom / member / moderator / admin)", required = False, default = None), role:d.Option(str, "Server role name", required = False), *topic:d.Option(str, "Tell the users about the channel subject (general-talk, general)", required = False, default = None), **reason:d.Option(str, "Reason for creation of the channel", required = False, default = None)):
 
         """
@@ -357,7 +371,7 @@ class ChannelModeration(commands.Cog):
 
         return
 
-    @channel.command()
+    @channel.command(name = "delete", description = "Delete a channel") # type: ignore
     async def delete(self, ctx:d.ApplicationContext, ch:d.Option(str, "Channel name", required = True)):
 
         """
@@ -394,7 +408,7 @@ class ChannelModeration(commands.Cog):
         del ch, chlog # Clear memory
         return 
 
-    @channel.command()
+    @channel.command(name = "modify", description = "Modify a channel") # type: ignore
     async def modify(self, ctx:d.ApplicationContext, channeltype, name, age_restricted = False, archived = False, category = None, delay = 0, locked = False, newname = None, overwrites = None, reason = None, region = None, require_tags = False, thread_slowmode = 0, topic = None, quality = None): #   Modify a channel
 
         await self.check_channel(ctx)# Calling the function manually
@@ -537,8 +551,8 @@ class ChannelModeration(commands.Cog):
 
         return
 
-    @channel.command()
-    async def clear(self, ctx:d.ApplicationContext, name, x):
+    @channel.command(name = "clear", description = "Clear a channel")   # type: ignore
+    async def clear(self, ctx:d.ApplicationContext, name:str, x):
 
         """
             #   Initializing the channels
@@ -582,28 +596,8 @@ class ChannelModeration(commands.Cog):
 
         return
 
-    @channel.before_invoke
-    async def check_channel(self, ctx:d.ApplicationContext):
 
-        print("test, before_invoke")
-        ch = ["auditlog", "member-reports", "member-support"]
-
-        category = utils.get(ctx.guild.categories, name = "log")
-
-        if not category:
-            category = utils.get(ctx.guild.categories, name = "log")
-            await ctx.guild.create_category(name = "log", reason = "")
-
-        for i in ch:
-            i = utils.get(ctx.guild.channels, name = i)#  Fetch channel
-            if not i: await ctx.channel.create_text_channel(name = i, category = category, reason = "Auto generated channel")
-
-        del ch, i, ctx  #   Clear some memory
-        del category
-
-        return
-
-    @channel.after_invoke
+    @channel.after_invoke   # type: ignore
     async def clear_memory(self, ctx: d.ApplicationContext):
 
         #   Clearing embeds

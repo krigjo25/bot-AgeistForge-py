@@ -27,9 +27,9 @@ class FrequentlyAskedQuestions(commands.Cog):
     async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False)): #   type: ignore
     
         match str(arg).lower(): #   type: ignore
-            case "moderator module": self.forum_moderation_module(ctx)
-            case "administrator module": self.administration_module(ctx)
-            case "forum moderator module": self.forum_moderation_module(ctx)
+            case "moderator module": self.forum_moderation_module()
+            case "administrator module": self.administration_module()
+            case "forum moderator module": self.forum_moderation_module()
             case _: self.main_response(ctx) #   type: ignore
 
         await ctx.respond(embed = self.base_embed) #   type: ignore
@@ -49,7 +49,7 @@ class FrequentlyAskedQuestions(commands.Cog):
         if ctx.author.guild_permissions.administrator:      #   type: ignore
             self.base_embed.add_field(name=f'Administrator Module', value="List of administration commands available to administrators.", inline=True)
 
-    def forum_moderation_module(self, ctx:ApplicationContext):
+    def forum_moderation_module(self):
 
         self.base_embed.title = 'Forum Moderator Module'
         self.base_embed.color = Colour.dark_purple()
@@ -66,7 +66,7 @@ class FrequentlyAskedQuestions(commands.Cog):
         
         self.base_embed.add_field(name=f'/channel SetSlowmode', value='- Sets the slowmode of the given channel ', inline=True)
     
-    def moderation_module(self, ctx:ApplicationContext):
+    def moderation_module(self):
 
         self.base_embed.title = 'Moderator Module'
         self.base_embed.color = Colour.dark_purple()
