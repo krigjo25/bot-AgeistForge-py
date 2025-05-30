@@ -39,3 +39,18 @@ class NotFoundError(ExceptionHandler):
         self.status_code = code
         self.message = message if message else "Resource not found"
         
+class SelfReferenceError(ExceptionHandler):
+    """ Raises when the requested member is not found """
+
+    def __init__(self, code:int, message:Optional[str]):
+        super().__init__(code, message)
+        self.status_code = code
+        self.message = message if message else "Member not found"
+
+class InvalidDurationError(ExceptionHandler):
+    """ Raises when the requested duration is not valid """
+
+    def __init__(self, code:int, message:Optional[str]):
+        super().__init__(code, message)
+        self.status_code = code
+        self.message = message if message else "Invalid duration specified"

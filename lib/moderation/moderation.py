@@ -1,14 +1,15 @@
 #   Python Repositories
-import datetime
-import humanfriendly as hf
-
+import datetime, humanfriendly as hf, os
+from typing import Optional
+from dotenv import load_dotenv
+load_dotenv()
 #   Discord Repositories
-import discord as d
-from discord import utils
-from discord.embeds import Embed, Colour
 from discord.ext import  commands
+from discord.embeds import Embed, Colour
+from discord import utils, Member, Permissions
+from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
-
+from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError
 class MemberModeration(commands.Cog):
 
     """
@@ -26,124 +27,88 @@ class MemberModeration(commands.Cog):
 
     def __init__(self, bot:commands.Bot):
         self.bot = bot
-        self.embed = Embed()
+        self.base_embed = Embed()
         self.now = datetime.datetime.now()
 
-    member = d.SlashCommandGroup(name = "member", description = "Member mananger", default_member_permissions = d.Permissions(moderate_members = True))
+    member = SlashCommandGroup(name = "member", description = "Member mananger", default_member_permissions = Permissions(moderate_members = True), guild_ids=[1044553368233848843])
 
-    @member.command()
-    async def warn(self, ctx:d.ApplicationContext, member:d.Member, *, reason:d.Option(str, "A paragraph / rule volaition statement", required = True)):
+    @member.before_invoke   # type: ignore
+    async def check_channel(self, ctx:ApplicationContext):
+        #   TODO: Check if auditlog channel exists, if not create one
+        pass
+
+    @member.command(name="warn", description="Warn a community member for their behavior")       #   type: ignore
+    async def warn(self, ctx:ApplicationContext, member:Member, #   type: ignore
+                   *, reason:Option(str, "A paragraph / rule volaition statement", required = True)):  #   type: ignore
 
         """
             Warn a member for the member's behavior / rules or regulation voilation
         """
 
-        await self.check_channel(ctx)  #   Manually call the function 
-
+        #   Check for an auditlog channel
         chlog = utils.get(ctx.guild.channels, name='auditlog')#   Fetch the channel log
 
         try:
-            if member == ctx.author: raise Exception("Can not warn your self")
-            if not chlog : raise Exception("audit channel does not exits")
+            if member == ctx.author: raise SelfReferenceError(400, "You tried to warn your self")
+            if not chlog : raise NotFoundError(404,"Channel \"**auditlog**\" does not exists")
 
-        except Exception as e :
+        except (SelfReferenceError, NotFoundError) as e :
 
-            self.embed.color = Colour.dark_red()
-            self.embed.title = "An Exception Occured"
-            self.embed.description =f"{e}, Try again !"
-            ctx.send(embed = self.embed)
-            
-            del chlog, reason, member # Clear som data
+            self.base_embed.color = Colour.dark_red()
+            self.base_embed.title = f"An {e.__class__.__name__} Occured !"
+            self.base_embed.description =f"{e.message}, Try again !"
+            ctx.respond(embed = self.base_embed)
             return
 
         else:
-
-            #   Prepare the embed message
-            self.embed.timestamp = self.now
-            self.embed.color = Colour.dark_red()
-            self.embed.description = f'*{reason}*\n\n User has been notified by a direct message.'
-            self.embed.title = f'**{member}** has been warned by {ctx.author.name}'
-            await chlog.send(embed=self.embed)
-
+            await self.create_log_entry(ctx, member, ctx.command.name, reason) #   type: ignore
 
             #   Message the user about the warn
-            self.embed.timestamp = self.now
-            self.embed.title = f"You have been warned by {ctx.author}"
-            self.embed.description = f"*{reason}*\n\nPlease read and follow the suggested guidelines for behavior in {ctx.guild}*"
-            await member.send(f"Greetings **{member}**.\n You recieve this Notification, because you are a member of {ctx.guild}.", embed = self.embed)
+            self.base_embed.timestamp = self.now
+            self.base_embed.title = f"You have been warned by {ctx.author}"
+            self.base_embed.description = f"You have been warened by an moderator, as a consequence of :*{reason}*\nPlease read and follow the suggested guidelines for behavior in {ctx.guild}*"
+            await member.send(f"Greetings **{member}**.\n You recieve this Notification, because you are a member of {ctx.guild}.", embed = self.base_embed) # type: ignore
+            await ctx.respond("Command executed.")#   type: ignore
 
-        #   Clear some memory
-        del member, reason, chlog
+    '''@member.command()   #   type: ignore
+    async def sush(self, ctx:ApplicationContext, member:Member, #   type: ignore
+                   time:Option(str, "(1s)ecound / (1m)inute / (1h)our / (1d)ay", required = True), #   type: ignore
+                   *, reason:Option(str, "Provide a reason to mute the member", required = True)): #   type: ignore
 
-        return
-
-    @member.command()#   Mute Members
-    async def sush(self, ctx:d.ApplicationContext, member:d.Member, time:d.Option(str, "Counting time, (1s / 1m / 1h / 1day)", required = True), *, reason:d.Option(str, "Provide a reason to mute the member", required = True)):
-
-        """
-            Give a member a timeout
-
-            #   Role & Channel
-            #   Check if "time" argument is digits
-            #   #   Set the time as int if it is a digit
-            #   Check if the channel exists
-            #   Check if there is a reason for unmute
-            #   Check if the time is less than 1 week
-            #   Check if the author is the member
-            #   Calculate the time
-            #   Prepare and messages
-            #   timeout and send the message
-        """
-
-        await self.check_channel(ctx)# Calling the function manually
-        ch = utils.get(ctx.guild.channels, name='auditlog')#    Fetch channel
+        ch = utils.get(ctx.guild.channels, name='auditlog')
 
         try:#   Checking if the selected member is the command invoker
+            if not ch : raise NotFoundError(404, "Required channel does not exists")
+            if member == ctx.author: raise SelfReferenceError(400,"Could not sush your self.")
+            elif len(time) < 2: raise ExceptionHandler(400,f"Please indicate the time using '{time}s', '{time}m', '{time}h' or '{time}d'")                                  #   type: ignore
+            elif int(time[0]) > 604800: raise InvalidDurationError(400, f" Could not sush **{member}** due to a limitation for 1w, please consider other consequences.")    #   type: ignore
 
-            if member == ctx.author: raise Exception(f"Could not sush your self.")
-            elif len(time) < 2: raise Exception(f"{time}s / {time}m / {time}h / {time}d)")
-            elif int(time[0]) > 604800: raise Exception(f' Could not sush **{member}** due to a limitation for 1w')
-            
-            if not ch : raise Exception("Auditlog does not exists")
-
-        except Exception as e: 
-
-            self.embed.color = Colour.dark_red()
-            self.embed.title = "An Exception Occured"
-            self.embed.description = f"{e}"
-            await ctx.send(embed = self.embed)
-            
-            del time, ch, reason, member #   Clear some memory
+        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError) as e: 
+            self.base_embed.color = Colour.dark_red()
+            self.base_embed.title = f"An {e.__class__.__name__} Occured"
+            self.base_embed.description = f"{e.message}"
+            await ctx.respond(embed = self.base_embed)
 
             return
 
         else:
 
-            time = hf.parse_timespan(time)#   Calculating the time
+            time = hf.parse_timespan(time)  #   type: ignore
 
             #   Prepare, send & Clean up embed
-            self.embed.timestamp = self.now
-            self.embed.color = Colour.dark_red()
-            self.embed.title = f"**{member.name}** has been sushed by {ctx.author.name} for {datetime.timedelta(seconds=time)}"
-            self.embed.description = f"*{reason}*.\n\n User has been notified by a direct message."
-            await ch.send(embed=self.embed)
-
-            #   Prepare and send the member, the message and sush the member
-            self.embed.timestamp = self.now
-            self.embed.title = f"You have been sushed by {ctx.author} for {datetime.timedelta(seconds=time)}"
-            self.embed.description = f"*{reason}*\n\n Please read"
-            await member.send(f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {ctx.guild}, You will not be able to use {ctx.guild}'s channels for {time}.\n")
-            await member.send(embed = self.embed)
+            self.base_embed.timestamp = self.now
+            self.base_embed.color = Colour.dark_red()
+            self.base_embed.title = f"**{member.display_name}** has been sushed by {ctx.author.name} for {datetime.timedelta(seconds=time)}"
+            self.base_embed.description = f"*{reason}*.\n\n User has been notified by a direct message."
+            
+            await self.create_log_entry(member = member, reason = reason, time = time) #   type: ignore
+            
+            await self.send_member_message(member, ctx, time) #   type: ignore
             await member.timeout(until = utils.utcnow() + datetime.timedelta(seconds=time), reason = reason)
-
-        #   Clear some memory
-        del member, reason, time
-        del ch
-
         return
 
     @member.command()
-    async def lift(self, ctx:d.ApplicationContext, member:d.Member):
+    async def lift(self, ctx:ApplicationContext, member:Member):
 
         """
             #   Fetching the channel and role
@@ -193,7 +158,7 @@ class MemberModeration(commands.Cog):
 
 
     @member.command()   #   type: ignore
-    async def kick(self, ctx:d.ApplicationContext, member:d.Member, *, reason:d.Option(str, "A reason to kick the member", required = True)):
+    async def kick(self, ctx:ApplicationContext, member:Member, *, reason:Option(str, "Provide A reason to kick the member", required = True)):
 
         """
             Kick a member out of the channel
@@ -243,27 +208,53 @@ class MemberModeration(commands.Cog):
         return
 
     @member.command()
-    async def announcement(self, ctx:d.ApplicationContext):
+    async def announcement(self, ctx:ApplicationContext):
 
         """
             Community announcements
 
         """
         modal = Channel(title = "Channel Announcement")
-        await ctx.send_modal(modal)
-        return
+        await ctx.send_modal(modal)'''
 
-    @member.after_invoke
-    async def clear_memory(self, ctx: d.ApplicationContext):
+    async def create_log_entry(self, ctx:ApplicationContext, member:Member, action:str, reason:str, time:Optional[str | int] = 0):
+        channel = utils.get(ctx.guild.channels, name='auditlog')
+
+
+        try:
+            if not channel: raise NotFoundError(404, "Channel \"**auditlog**\" does not exists")
+        except Exception as e:
+            print(e)
+
+        else:
+            match(action):
+                case "warn":
+                    action = "warned"
+                case _:
+                    action = action
+
+            #   Prepare, send & Clean up embed
+            self.base_embed.timestamp = self.now
+            self.base_embed.color = Colour.dark_red()
+            self.base_embed.title = f"**{member.name}** has been {action} by {ctx.author.name} for {time}" if time else  f"**{member.name}** has been {action} by {ctx.author.name}"
+            self.base_embed.description = f"*{reason}*.\n\n User has been notified by a direct message."
+            await channel.send(embed=self.base_embed)
+
+    async def send_member_message(self, member:Member, ctx:ApplicationContext, time:str | int):
+
+        await member.send(f"""Greetings, **{member.name}**.
+                          You recieve this notification, because you're a member of {ctx.guild}, you will not be able to use {ctx.guild}'s channels for {time}.
+                          Please read and follow the suggested guidelines for behavior in {ctx.guild}.""")
+        await member.send(embed = self.base_embed)
+
+    @member.after_invoke                            #   type: ignore
+    async def clear_memory(self, ctx:ApplicationContext):
 
         #   Clearing embeds
-        self.embed.clear_fields()
-        self.embed.remove_image()
-        self.embed.remove_author()
-        self.embed.remove_footer()
-        self.embed.description = ""
-        self.embed.remove_thumbnail()
-        self.embed.color = Colour.dark_purple()
-
-        del ctx #   Clearing some memory
-        return
+        self.base_embed.clear_fields()
+        self.base_embed.remove_image()
+        self.base_embed.remove_author()
+        self.base_embed.remove_footer()
+        self.base_embed.description = ""
+        self.base_embed.remove_thumbnail()
+        self.base_embed.color = Colour.dark_purple()

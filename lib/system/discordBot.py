@@ -3,7 +3,7 @@
 #   License      :   GNU General Public License v3.0
 
 #   Discord Repositories
-import discord as d, sys, os
+import discord as d, sys, os, time
 from discord.ext import commands
 from discord.message import Message
 
@@ -25,11 +25,14 @@ class DiscordBot(commands.Bot):
         return
 
     async def on_ready(self):
+        start = time.perf_counter()
         logger.info(f"---- Environment Check: ----\n Python Executeable {sys.executable}\n Working Directory: {os.getcwd()}\n * Application Module Info:\nVersion of Discord :{d.__version__}\n Discord module loaded from: {d.__file__}")    #   type: ignore
-        
+
         try:
+
             await self.wait_until_ready()
             await self.sync_commands() #   type: ignore
+            await self.process_commands(self.user) #   type: ignore
 
         except AttributeError as e:
             logger.critical(f"An AttributeError occured !\n {e}\n")
@@ -42,7 +45,8 @@ class DiscordBot(commands.Bot):
             svr = [i for i in self.guilds]
             for i in svr: logger.info(f'{self.user.name} has establized an connection to {i}') #   type: ignore
 
-        logger.info
+        logger.info(f"---- Bot is ready ----\nBot Name: {self.user.name}\nBot ID: {self.user.id}\nBot Version: {d.__version__}\nTime taken to load the bot: {time.perf_counter() - start:.2f} seconds") #   type: ignore
+    
     async def on_message(self, message:Message):
 
         await self.process_commands(message)

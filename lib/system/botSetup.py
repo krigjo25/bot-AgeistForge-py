@@ -58,7 +58,7 @@ class DiscordSetup():
 
 
     def moderation_setup(self):
-        self.bot.add_cog(Administrator(self.bot))
-        self.bot.add_cog(RoleModeration(self.bot))
+        #self.bot.add_cog(Administrator(self.bot))
+        #self.bot.add_cog(RoleModeration(self.bot))
         self.bot.add_cog(MemberModeration(self.bot))
-        self.bot.add_cog(ChannelModeration(self.bot))
+        #self.bot.add_cog(ChannelModeration(self.bot))
