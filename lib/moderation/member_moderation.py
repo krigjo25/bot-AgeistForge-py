@@ -3,17 +3,17 @@ import datetime, humanfriendly as hf
 
 from dotenv import load_dotenv
 load_dotenv()
+
 #   Discord Repositories
-from discord import Forbidden, Colour
-from discord.ext import  commands
 from discord.embeds import Embed
-from discord import Member, Permissions
+from discord.ext import  commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
+from discord import Forbidden, Colour, utils, Member, Permissions, PermissionOverwrite
 
 from lib.modal.channel import Channel
 from lib.utils.moderation import ModerationUtils
 from lib.utils.logger_config import CommandWatcher
-from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError
+from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
 
 logger = CommandWatcher(name="Member Moderation", dir=".logs") #   type: ignore
 logger.file_handler()
@@ -33,8 +33,48 @@ class MemberModeration(commands.Cog):
 
     @member.before_invoke   # type: ignore
     async def check_channel(self, ctx:ApplicationContext):
-        #   TODO: Check if auditlog / exception  channel exists, if not create one
-        pass
+    
+        channel = []
+        ch = ""#("auditlog", "report", "support") 
+
+        try :
+            for i in ch:
+                #   Fetch category channels
+                if utils.get(ctx.guild.categories, name = "log"):     
+                    if utils.get(ctx.guild.text_channels, name = i): 
+                        channel.append(i)
+            
+            if len(channel) == len(ch): 
+                raise ExceptionHandler(f"Channels already exists, please try again with another name or delete the existing channels: {channel}")  #   type: ignore
+
+        except (TypeError, ExceptionHandler) as e: 
+            print(e)
+
+        else:
+
+            #   Creating a channel
+            PERMS = {ctx.guild.default_role:PermissionOverwrite(view_channel=False)}
+
+            for i in ch:
+
+                self.base_embed.color = Colour.dark_red()
+                self.base_embed.title = f'Auto Generated Channel'
+
+                match i:
+
+                    case "auditlog": 
+                        self.base_embed.description = "Created to have easy accsess to bot commands used by admin / moderator"
+
+                    case "report": 
+                        self.base_embed.description = "Member report channel"
+
+                    case "support": 
+                        self.base_embed.description = "Member support channel"
+                
+                i = await ctx.guild.create_text_channel(i, overwrites=PERMS)
+
+                self.base_embed.timestamp = datetime.datetime.now()
+                await i.send(embed=self.base_embed)
 
     @member.command(name="warn", description="Warn a community member for their behavior")       #   type: ignore
     async def warn(self, ctx:ApplicationContext, member:Member, #   type: ignore
@@ -45,12 +85,11 @@ class MemberModeration(commands.Cog):
         """
         mod_utils = ModerationUtils(self.bot)
 
-        try:pass
-            #if member == ctx.author: raise SelfReferenceError(400, "You tried to warn your self")
+        try:
+            mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
 
         except (SelfReferenceError) as e:
-            #await mod_utils.create_error_entry(ctx,e)
-            return
+            await mod_utils.create_error_entry(ctx,e)
 
         else:
             await mod_utils.create_log_entry(ctx, member, ctx.command.name, reason)      #   type: ignore
@@ -61,25 +100,33 @@ class MemberModeration(commands.Cog):
     async def sush(self, ctx:ApplicationContext, member:Member, #   type: ignore
                    time:Option(str, "(1s)ecound / (1m)inute / (1h)our / (1d)ay", required = True), #   type: ignore
                    *, reason:Option(str, "Provide a reason to mute the member", required = True)): #   type: ignore
-        
-        mod_utils = ModerationUtils(self.bot)
-        try:
-            if member == ctx.author: raise SelfReferenceError("Could not sush your self.", 400)
-            elif len(time) != 2: raise ExceptionHandler(f"Please indicate the time using '{time}s', '{time}m', '{time}h' or '{time}d'")                                  #   type: ignore
-            elif int(time[0]) > 604800: raise InvalidDurationError(f" Could not sush **{member}** due to a limitation for 1w, please consider other consequences.")    #   type: ignore
 
-        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError) as e: 
-            #await mod_utils.create_error_entry(ctx, e)  #   type: ignore
-            return
+        arg = ""
+        week = 604800  #   1 week in seconds
+        mod_utils = ModerationUtils(self.bot)
+
+        for i in str(time):
+            if i.isdigit(): arg += i
+
+        try:
+            mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
+            #if array not in test: raise ExceptionHandler(f"Please indicate the time using '{time}s', '{time}m', '{time}h' or '{time}d'")                                  #   type: ignore
+            if int(arg) > week: raise InvalidDurationError(f" Could not sush **{member}** due to a limitation for 1w, please consider other consequences.")    #   type: ignore
+
+            if member.communication_disabled_until:
+                if member.communication_disabled_until > datetime.datetime.now(): #   type: ignore
+                    duration = member.communication_disabled_until - datetime.datetime.now()  #   type: ignore
+                    raise InvalidDurationError(f"Could not sush **{member}**. **{member}** is already shushed for {duration}s")  #   type: ignore
+
+        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError, AuthorizationError) as e: 
+            await mod_utils.create_error_entry(ctx, e)  #   type: ignore
 
         else:
-            
             time = hf.parse_timespan(time)                                                                          #   type: ignore
-            
 
             await mod_utils.create_log_entry(ctx, member, ctx.command.name, reason, time)                           #   type: ignore
             await mod_utils.send_member_message(ctx, member, ctx.command.name, reason, time)                        #   type: ignore
-            #await member.timeout(until = utils.utcnow() + datetime.timedelta(seconds=time), reason = reason)       #   type: ignore
+            await member.timeout(until = utils.utcnow() + datetime.timedelta(seconds=time), reason = reason)       #   type: ignore
 
             await ctx.respond("Command executed.")                                                                  #   type: ignore
         return
@@ -87,27 +134,26 @@ class MemberModeration(commands.Cog):
     @member.command(name = "lift", description="Lift a community member curse")   #   type: ignore
     async def lift(self, ctx:ApplicationContext, member:Member):
 
-        await self.create_log_entry(ctx, member, "unmuted")  #   type: ignore
-        try:
-            await member.timeout(until=None)
-        except Forbidden:
-            await self.create_error_entry(ctx, ExceptionHandler(403, "I do not have permission to lift the mute for this member."))  #   type: ignore
+        mod_utils = ModerationUtils(self.bot)
+        
+        try: mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
+
+        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError, AuthorizationError) as e: 
+            await mod_utils.create_error_entry(ctx, e)  #   type: ignore
+
         else:
-            await self.create_log_entry(ctx, member, ctx.command.name)      #   type: ignore
-            await self.send_member_message(ctx, member, ctx.command.name)   #   type: ignore
+            await member.timeout(until=None)
+            await mod_utils.create_log_entry(ctx, member, ctx.command.name)  #   type: ignore
+            await mod_utils.send_member_message(ctx, member, ctx.command.name)   #   type: ignore
             await ctx.respond("Command executed.")                                  #   type: ignore
 
     @member.command(name = "kick", description="Kick a community member")   #   type: ignore
     async def kick(self, ctx:ApplicationContext, member:Member, *, reason:Option(str, "Provide A reason to kick the member", required = True)):
 
         mod_utils = ModerationUtils(self.bot)
-        try :
-            if member == ctx.author: raise SelfReferenceError("Can not kick your self")
-            
-        except (SelfReferenceError, Forbidden) as e :
 
-            await mod_utils.create_error_entry(ctx, e)  #   type: ignore
-            return 
+        try : mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
+        except (SelfReferenceError, Forbidden) as e : await mod_utils.create_error_entry(ctx, e)  #   type: ignore
 
         else:
             
@@ -116,20 +162,21 @@ class MemberModeration(commands.Cog):
 
             await member.kick(reason=reason)                                                #   type: ignore
 
-    '''@member.command(name= "announce", description="Make an announcement to the community")  #   type: ignore
+    @member.command(name= "announce", description="Make an announcement to the community")  #   type: ignore
     async def announcement(self, ctx:ApplicationContext):
 
         """
             Community announcements
 
         """
-        modal = Channel(title = "Channel Announcement")
-        await ctx.send_modal(modal)'''
+        modal = Channel(title = "Announcement")
+        await ctx.send_modal(modal)
+
 
     @member.after_invoke                            #   type: ignore
-    async def clear_memory(self, ctx:ApplicationContext):
+    async def after_invoke(self, ctx:ApplicationContext):
 
-        #   Clearing embeds
+        self.base_embed.title = ""
         self.base_embed.clear_fields()
         self.base_embed.remove_image()
         self.base_embed.remove_author()

@@ -6,28 +6,10 @@ import discord as d
 from discord import utils, Colour
 from discord.ui import InputText, Modal
 
+
 class Member(Modal):
 
     """
-        Copyright (C) 2023  Kristoffer Gjøsund
-
-        Collection of Community Commands
-
-        >   Creation Date   : 21.02-23
-        >   Last update     : 22.02-23
-
-        Discord UI, reporting / supporting members
-
-        This program is free software: you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-
-        This program is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
-        Member modals
 
     """
 
@@ -47,7 +29,7 @@ class Member(Modal):
     def report(self):
 
         self.add_item(InputText(label = "Member", placeholder= "Member Name"))
-        self.add_item(InputText(label = "Uniform Resource Locator", style=d.InputTextStyle.long, required= True, placeholder= "https://google.com"))
+        self.add_item(InputText(label = "Uniform Resource Locator (URL)", style=d.InputTextStyle.long, required= True, placeholder= "https://google.com"))
         self.add_item(InputText(label = "Reason", style=d.InputTextStyle.long, required= False, placeholder= ""))
         self.embed.colour = d.Colour.dark_red()
 
@@ -57,10 +39,11 @@ class Member(Modal):
 
         self.add_item(InputText(label = "Title Of The Document", placeholder= "eg. How To Use Commands", style=d.InputTextStyle.short))
         self.add_item(InputText(label = "Image", placeholder= "Member", style=d.InputTextStyle.short))
-        self.add_item(InputText(label = "Challange", placeholder= "What do you need help with ?", style=d.InputTextStyle.long))
+        self.add_item(InputText(label = "Challange", placeholder= "What do you need help with?", style=d.InputTextStyle.long))
         self.embed.colour = d.Colour.dark_red()
         return
-
+    
+    def bugreport(self): pass
     async def callback(self, interaction:d.Interaction):
 
         for i in self.kwargs:

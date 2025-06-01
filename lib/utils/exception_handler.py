@@ -14,7 +14,7 @@ class ExceptionHandler(Exception):
             self.message = "An error occurred"
 
 class OperationalError(ExceptionHandler):
-    """ Raises when duplicated is not allowed """
+    """ Raises when a database operation is not allowed """
 
     error = {
         000:"Dublicated data",
@@ -22,7 +22,7 @@ class OperationalError(ExceptionHandler):
         404:"Table was not found in the database",
         500:'Column has to be a type of list'}
 
-    def __init__(self, message:Optional[str] = None, code:int = 000,):
+    def __init__(self, message:Optional[str] = None, code:int = 000):
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else self.error[code]
@@ -30,7 +30,7 @@ class OperationalError(ExceptionHandler):
 class NotFoundError(ExceptionHandler):
     """ Raises when the requested resource is not found """
 
-    def __init__(self, message:Optional[str] = None, code:int = 400,):
+    def __init__(self, message:Optional[str] = None, code:int = 400):
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else "Resource not found"
@@ -38,15 +38,23 @@ class NotFoundError(ExceptionHandler):
 class SelfReferenceError(ExceptionHandler):
     """ Raises when the requested member is not found """
 
-    def __init__(self, message:Optional[str] = None, code:int = 400,):
+    def __init__(self, message:Optional[str] = None, code:int = 503):
         super().__init__(message, code)
         self.status_code = code
-        self.message = message if message else "Member not found"
+        self.message = message if message else "Could not perform action on self, please try again with another member"
 
 class InvalidDurationError(ExceptionHandler):
     """ Raises when the requested duration is not valid """
 
-    def __init__(self, message:Optional[str] = None, code:int = 400,):
+    def __init__(self, message:Optional[str] = None, code:int = 400):
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else "Invalid duration specified"
+
+class AuthorizationError(ExceptionHandler):
+    """ Raises when the a user tries to authorize something forbidden """
+
+    def __init__(self, message:Optional[str] = None, code:int = 403):
+        super().__init__(message, code)
+        self.status_code = code
+        self.message = message if message else "You are not authorized to perform this action on this member"

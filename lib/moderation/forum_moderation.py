@@ -77,15 +77,10 @@ class RoleModeration(commands.Cog):
 
                 self.embed.timestamp = datetime.datetime.now()
                 await i.send(embed=self.embed)
-    
-        #   Clear some memory
-        del perms, ch, channel
-        self.embed.description =""
 
-        return
 
-    @role.commend(name= "create", description = "Create a new Role") # type: ignore
-    async def create(): pass
+    @role.command(name= "create", description = "Create a new Role") # type: ignore
+    async def create(ctx:d.ApplicationContext): pass
 
     @role.command(name = "delete", describe = "Delete a role")  # type: ignore
     async def delete(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True) ):

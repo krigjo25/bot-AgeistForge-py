@@ -12,7 +12,7 @@ from discord import utils, Member, Colour
 from discord.commands import ApplicationContext
 
 from lib.utils.logger_config import CommandWatcher
-from lib.utils.exception_handler import NotFoundError, ExceptionHandler
+from lib.utils.exception_handler import NotFoundError, ExceptionHandler, SelfReferenceError, InvalidDurationError, AuthorizationError
 
 logger = CommandWatcher(name="Moderation Utils", dir=".logs")  #   type: ignore
 logger.file_handler()
@@ -57,14 +57,13 @@ class ModerationUtils(commands.Cog):
         self.base_embed.title = f"An {e.__class__.__name__} Occured !"
 
         logger.error(f"An {e.__class__.__name__} Occured: {e.message}")
-        
-        channel = utils.get(ctx.guild.channels, name='Exception-logs')
-        
-        if not channel:
-            channel = await ctx.guild.create_text_channel(name='Exception-logs', topic={e.__class__.__name__}, reason="Creating a channel for exception logs")
-        await channel.send(embed=self.base_embed)
+        await ctx.respond(f"An {e.__class__.__name__} Occured: {e.message}", ephemeral=True)  #   type: ignore
+        # TODO: Create a channel for exception logs if not exists
 
-    async def send_member_message(self, ctx:ApplicationContext, member:Member, action:str, reason:Optional[str] = None, time:Optional[str | int] = None):
+    async def send_member_message(self, ctx:ApplicationContext, member:Member, action:str, reason:Optional[str] = None, time:Optional[float] = None):
+        """
+            Send a direct message to the member about the action taken
+        """
 
         server = f"**{ctx.guild.name if ctx.guild else "the server"}**"
         member_message= ""
@@ -73,16 +72,24 @@ class ModerationUtils(commands.Cog):
         
         match(action):  #   type: ignore
             case "warn":
-                member_message = f"You have been warned by an moderator, as a consequence of :*{reason}*"
+                member_message = f"You have been warned by an moderator, as a consequence of :\n*{reason}*.\n\n"
  
             case "sush":
-                member_message = f"you will not be able to use {server}'s channels for {time}s."
+                member_message = f"You will not be able to use {server}'s channels for {int(time) * 1}s as a consequence of :\n*{reason}*.\n\n"
 
             case "lift":
-                member_message = "your sush has been lifted"
+                member_message = "Your sush has been lifted.\n\n"
 
             case "kick":
-                member_message = "you have been kicked out of the server"
+                member_message = f"You have been kicked out of the server. as a conequence of \n*{reason}*.\n\n"
     
-        await member.send(f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {server}.\n\n{member_message}.Thank you for your patient and understand\n Sincerely Moderation team")  #   type: ignore
-        await member.send(embed = self.base_embed)
+        await member.send(f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {server}.\n\n{member_message}Thank you for your patient and understanding\n Sincerely Moderation team")  #   type: ignore
+
+    def fetch_member_exception(self, ctx:ApplicationContext, member:Member):
+        """
+            Fetch the exception and return it
+        """
+        if member == ctx.author: raise SelfReferenceError()
+        if not member: raise NotFoundError(f"{member.name} not found")  #   type: ignore
+        if member.top_role >= ctx.author.top_role: raise AuthorizationError()  #   type: ignore
+        
