@@ -1,6 +1,5 @@
 import discord as d
 
-from typing import TypedDict, 
 class ModalDictionary(object):
 
     """
@@ -14,7 +13,7 @@ class ModalDictionary(object):
         title = {
 
             "label": "Title",
-            "required":b (True)}
+            "required":True}
 
         ch = {
 

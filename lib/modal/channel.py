@@ -26,10 +26,9 @@ class Channel(ModalBase):
 
     def announcement(self):
 
-        md = ModalDictionary().announcement()
-        
-        print(md)
-        for i in md: 
+        modal = ModalDictionary().announcement()
+
+        for i in modal: 
             self.create_input(
                 label = i['label'], 
                 placeholder=i.get('description'), 

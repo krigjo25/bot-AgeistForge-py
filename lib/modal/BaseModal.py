@@ -70,7 +70,6 @@ class ModalBase(Modal):
     
     async def callback(self, interaction:Interaction):
 
-        print(f"Modal {self.title} was submitted by {interaction.user.display_name}")
         data = {}
         for  i in self.children:
             data[i.label] = i.value.lower() if isinstance(i.value, str) else i.value
@@ -78,7 +77,7 @@ class ModalBase(Modal):
         match self.title.lower():
 
             case "announcement":
-                ch = utils.get(interaction.guild.channels, name = self.children[0].value)   #   Fetch the channel
+                ch = utils.get(interaction.guild.channels, name = self.children[1].value)   #   Fetch the channel
 
                 try:
                     if not ch: raise NotFoundError("Channel does not exits")
