@@ -1,5 +1,6 @@
 import discord as d
 
+from typing import TypedDict, 
 class ModalDictionary(object):
 
     """
@@ -10,12 +11,10 @@ class ModalDictionary(object):
 
     def announcement(self):
 
-        list_inputs = []
-
         title = {
 
             "label": "Title",
-            "required": True}
+            "required":b (True)}
 
         ch = {
 
@@ -30,12 +29,7 @@ class ModalDictionary(object):
             "label": "Message",
             "style": d.InputTextStyle.long}
 
-        list_inputs.append(ch)        # type: ignore
-        list_inputs.append(url)       # type: ignore
-        list_inputs.append(title)     # type: ignore
-        list_inputs.append(message)   # type: ignore
-
-        return list_inputs
+        return (title, ch, url, message)
 
     def server_report(self): pass
     def discord_report(self): pass
