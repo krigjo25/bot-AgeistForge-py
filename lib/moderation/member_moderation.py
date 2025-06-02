@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 #   Discord Repositories
-from discord.embeds import Embed
+
 from discord.ext import  commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 from discord import Forbidden, Colour, utils, Member, Permissions, PermissionOverwrite
@@ -26,7 +26,6 @@ class MemberModeration(commands.Cog):
 
     def __init__(self, bot:commands.Bot):
         self.bot = bot
-        self.base_embed = Embed()
         self.now = datetime.datetime.now()
 
     member = SlashCommandGroup(name = "member", description = "Member mananger", default_member_permissions = Permissions(moderate_members = True), guild_ids=[1044553368233848843])
@@ -78,15 +77,15 @@ class MemberModeration(commands.Cog):
 
     @member.command(name="warn", description="Warn a community member for their behavior")       #   type: ignore
     async def warn(self, ctx:ApplicationContext, member:Member, #   type: ignore
-                   *, reason:Option(str, "A paragraph / rule volaition statement", required = True)):  #   type: ignore
+                   *, reason:Option(str,"A paragraph / rule volaition statement", required = True)):  #   type: ignore
 
         """
             Warn a member for the member's behavior / rules or regulation voilation
         """
         mod_utils = ModerationUtils(self.bot)
 
-        try:
-            mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
+        try:pass
+            #mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
 
         except (SelfReferenceError) as e:
             await mod_utils.create_error_entry(ctx,e)
@@ -173,8 +172,8 @@ class MemberModeration(commands.Cog):
         await ctx.send_modal(modal)
 
 
-    @member.after_invoke                            #   type: ignore
-    async def after_invoke(self, ctx:ApplicationContext):
+    #@member.after_invoke                            #   type: ignore
+    '''async def after_invoke(self, ctx:ApplicationContext):
 
         self.base_embed.title = ""
         self.base_embed.clear_fields()
@@ -183,4 +182,4 @@ class MemberModeration(commands.Cog):
         self.base_embed.remove_footer()
         self.base_embed.description = ""
         self.base_embed.remove_thumbnail()
-        self.base_embed.color = Colour.dark_purple()
+        self.base_embed.color = Colour.dark_purple()'''

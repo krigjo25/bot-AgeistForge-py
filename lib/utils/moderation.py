@@ -7,10 +7,11 @@ load_dotenv()
 
 #   Discord Repositories
 from discord.ext import  commands
-from discord.embeds import Embed
+
 from discord import utils, Member, Colour
 from discord.commands import ApplicationContext
 
+from lib.utils.embed import EmbedFactory as Embed
 from lib.utils.logger_config import CommandWatcher
 from lib.utils.exception_handler import NotFoundError, ExceptionHandler, SelfReferenceError, InvalidDurationError, AuthorizationError
 
@@ -24,7 +25,7 @@ class ModerationUtils(commands.Cog):
         self.base_embed = Embed()
         self.now = datetime.datetime.now()
 
-    async def create_log_entry(self, ctx:ApplicationContext, member:Member, action:str, reason:Optional[str] = None, time:Optional[str | int] = None):
+    async def create_log_entry(self, ctx:ApplicationContext, member:Member, action:str, reason:str, time:Optional[str | int] = None):
         action = ctx.command.name if not action else action     #   type: ignore
         channel = utils.get(ctx.guild.channels, name='auditlog')
 
@@ -44,32 +45,27 @@ class ModerationUtils(commands.Cog):
                 case _:
                     action = action + "ed"
 
-            #   Prepare, send & Clean up embed
-            self.base_embed.timestamp = self.now
-            self.base_embed.color = Colour.dark_red()
-            self.base_embed.title = f"**{member.name}** has been {action} by {ctx.author.name} for {int(time)}s" if time else  f"**{member.name}** has been {action} by {ctx.author.name}"
-            self.base_embed.description = f"*{reason}*.\n\n User has been notified by a direct message." if reason else f"User has been notified by a direct message."
-            await channel.send(embed=self.base_embed)
+            dictionary = {
+                "title": f"**{member.name}** has been {action} by {ctx.author.name}",
+                "message": f"*{reason}*.\n\n User has been notified by a direct message."
+            }
+
+            embed = self.base_embed.warning(dictionary)
+
+            await channel.send(embed=embed)
 
     async def create_error_entry(self, ctx:ApplicationContext, e:ExceptionHandler):
-        self.base_embed.color = Colour.dark_red()
-        self.base_embed.description =f"{e.message}, Try again !"
-        self.base_embed.title = f"An {e.__class__.__name__} Occured !"
-
         logger.error(f"An {e.__class__.__name__} Occured: {e.message}")
         await ctx.respond(f"An {e.__class__.__name__} Occured: {e.message}", ephemeral=True)  #   type: ignore
-        # TODO: Create a channel for exception logs if not exists
 
     async def send_member_message(self, ctx:ApplicationContext, member:Member, action:str, reason:Optional[str] = None, time:Optional[float] = None):
         """
             Send a direct message to the member about the action taken
         """
 
-        server = f"**{ctx.guild.name if ctx.guild else "the server"}**"
         member_message= ""
-        if guidelines := ctx.guild.rules_channel:  #   type: ignore
-            self.base_embed.set_footer(text=f"Please read the guidelines in {guidelines.mention} for more information.")
-        
+        server = f"**{ctx.guild.name if ctx.guild else "the server"}**"
+
         match(action):  #   type: ignore
             case "warn":
                 member_message = f"You have been warned by an moderator, as a consequence of :\n*{reason}*.\n\n"
@@ -82,6 +78,11 @@ class ModerationUtils(commands.Cog):
 
             case "kick":
                 member_message = f"You have been kicked out of the server. as a conequence of \n*{reason}*.\n\n"
+            
+            case _:  pass
+
+        if ctx.guild.rules_channel : 
+            member_message += f"Please read the guidelines in **{ctx.guild.rules_channel.mention}** for more information.\n\n"
     
         await member.send(f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {server}.\n\n{member_message}Thank you for your patient and understanding\n Sincerely Moderation team")  #   type: ignore
 

@@ -1,12 +1,10 @@
-from discord import utils, Colour, Embed
+from discord import  Colour, Embed
 
 import datetime
 from typing import Optional
 
+from lib.utils.command_decorators import ClearEmbeds
 from lib.utils.exception_handler import ExceptionHandler
-
-
-
 
 
 class EmbedFactory(object):
@@ -14,56 +12,94 @@ class EmbedFactory(object):
     Utility class for creating and managing Discord embeds.
     Inherits from discord.Embed to provide additional functionality.
     """
-    def __init__(self, author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.base_embed = Embed()
 
-    def _base_embed(self, dictionary: dict, author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
+    BASE_EMBED = Embed()
+
+
+    @classmethod
+    def _base_embed(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None, text:Optional[str] = None):
         """
         Returns the base embed object.
         """
+
         for key, value in dictionary.items():
 
-            match str(key).lower():
+            match key.lower():
                 case "title":
-                    self.base_embed.title = value
-                
-                case "url":
-                    if value: self.base_embed.url = value
-                                
+                    cls.BASE_EMBED.title = value
+
                 case "message":
-                    self.base_embed.description = value
+                    cls.BASE_EMBED.description = value
 
-        self.base_embed.timestamp = datetime.datetime.now()
-        if author: self.base_embed.set_author(name=f"{author}", icon_url=avatar or None)
-        if team: self.base_embed.set_footer(text=f"Wish you a glorious day further,\nThe {team} Team", icon_url=avatar or None)
+                case "url":
+                    if value: cls.BASE_EMBED.url = value
+                
+                case "image":
+                    if value: cls.BASE_EMBED.set_image(url=value)
 
-        return self.base_embed
-    def info(self) -> Embed:
+                case "thumbnail":
+                    if value: cls.BASE_EMBED.set_thumbnail(url=value)
+
+                case _: pass
+
+        if  add_fields: cls.add_new_fields(add_fields)
+
+        if not text: text = f"Wish you a glorious day further,\nThe {team} Team"
+
+        cls.BASE_EMBED.timestamp = datetime.datetime.now()
+        if author: cls.BASE_EMBED.set_author(name=f"{author}", icon_url=avatar or None)
+        if team: cls.BASE_EMBED.set_footer(text=text, icon_url=avatar or None)
+
+    @classmethod
+    def add_new_fields(cls, dictionary: dict[str,str]):
+
+        for key, value in dictionary.items():
+            cls.BASE_EMBED.add_field(name=key, value=value, inline=False)
+
+    @classmethod
+    def info(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
         """
         Sets the embed color to dark purple for informational messages.
         """
-        self.base_embed.colour = Colour.dark_blue()
 
-    def error(self, error:ExceptionHandler) -> Embed:
+        cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+        cls.BASE_EMBED.colour = Colour.dark_blue()
+        
+        return cls.BASE_EMBED
+
+    @classmethod
+    def error(cls, error:ExceptionHandler) -> Embed:
         """
             Creates an embed for exceptions.
         """
-        self.base_embed.colour = Colour.dark_red()
-        self.base_embed.title = "An error occurred"
-        self.base_embed.description = f"```{error.message}```"
-        self.base_embed.timestamp = datetime.datetime.now()
+        dictionary = {
+            "title": f"An {error.__class__.__name__} Occurred",
+            "message": error.message
+        }
 
-        return self.base_embed
+        cls._base_embed(dictionary)
+        cls.BASE_EMBED.colour = Colour.dark_red()
 
-    def critical(self):
-        self.base_embed.colour = Colour.red()
-        pass
+        return cls.BASE_EMBED
 
-    def create_embed(self, title: str, description: str, url: Optional[str] = None):
-        self.base_embed.colour = Colour.dark_purple()
-        pass
+    @classmethod
+    def critical(cls):
+        cls.BASE_EMBED.colour = Colour.red()
+        return cls.BASE_EMBED
+    
+    @classmethod
+    def warning(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
+        """
+        Sets the embed color to dark red for warning messages.
+        """
+        cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+        cls.BASE_EMBED.colour = Colour.dark_red()
 
-    def embed_exception(self, exception: Exception) -> Embed:
+        return cls.BASE_EMBED
+    
+    @classmethod
+    def create_embed(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
+        cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+        cls.BASE_EMBED.colour = Colour.dark_purple()
 
-        
+        return cls.BASE_EMBED
