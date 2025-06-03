@@ -45,11 +45,11 @@ class ModalBase(Modal):
             data[i.label] = i.value.lower() if isinstance(i.value, str) else i.value
 
         match self.title.lower():                                                          #   type: ignore
-            #case "bug-report":      await self.bug_report_modal(interaction, data)         #   type: ignore
-            #case "suggestion":      await self.suggestion_modal(interaction, data)         #   type: ignore
+            case "bug-report":      await self.bug_report_modal(interaction, data)         #   type: ignore
+            case "suggestion":      await self.suggestion_modal(interaction, data)         #   type: ignore
             case "announcement":    await self.announcement_modal(interaction, data)       #   type: ignore
-            #case "member-report":   await self.member_report_modal(interaction, data)      #   type: ignore
-            #case "member-support":  await self.member_support_modal(interaction, data)     #   type: ignore
+            case "member-report":   await self.member_report_modal(interaction, data)      #   type: ignore
+            case "member-support":  await self.member_support_modal(interaction, data)     #   type: ignore
 
         await interaction.response.send_message("Modal command executed", ephemeral=True)   #   type: ignore
 
@@ -67,4 +67,15 @@ class ModalBase(Modal):
             response =  self.base_embed.info(data, team = interaction.user.top_role)         #   type: ignore
             await ch.send(embed=response)                                                    #   type: ignore
 
+    async def bug_report_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
+        pass
+
+    async def member_report_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
+        pass
+
+    async def member_support_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
+        pass
+
+    async def suggestion_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
+        pass
             
