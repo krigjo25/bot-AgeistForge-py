@@ -50,13 +50,8 @@ class ModalBase(Modal):
             case "announcement":    await self.announcement_modal(interaction, data)       #   type: ignore
             #case "member-report":   await self.member_report_modal(interaction, data)      #   type: ignore
             #case "member-support":  await self.member_support_modal(interaction, data)     #   type: ignore
-            
-            
-
 
         await interaction.response.send_message("Modal command executed", ephemeral=True)   #   type: ignore
-
-        
 
     async def announcement_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
         ch = utils.get(interaction.guild.channels, type = ChannelType.news )                #   type: ignore
