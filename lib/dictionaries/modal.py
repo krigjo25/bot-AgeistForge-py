@@ -15,10 +15,7 @@ class ModalDictionary(object):
             "label": "Title",
             "required":True}
 
-        ch = {
 
-            "required": True,
-            "label": "Channel Name"}
         url = {
             "label": "URL",
             "description": "Optional URL for the announcement"}
@@ -28,7 +25,7 @@ class ModalDictionary(object):
             "label": "Message",
             "style": d.InputTextStyle.long}
 
-        return (title, ch, url, message)
+        return (title, url, message)
 
     def server_report(self): pass
     def discord_report(self): pass

@@ -42,22 +42,20 @@ class MemberModeration(commands.Cog):
                 if utils.get(ctx.guild.categories, name = "log"):     
                     if utils.get(ctx.guild.text_channels, name = i): 
                         channel.append(i)   #   type: ignore
-            
-            if len(channel) == len(ch):     #   type: ignore
-                raise ExceptionHandler(f"Channels already exists, please try again with another name or delete the existing channels: {channel}")  #   type: ignore
 
-        except (TypeError, ExceptionHandler) as e: 
+        except (TypeError, Exception) as e: 
             await mod_utils.create_error_entry(ctx, e)  #   type: ignore
 
 
+
         else:
+            if not len(channel) == len(ch):  #   type: ignore
 
-            #   Creating a channel
-            PERMS = {ctx.guild.default_role:PermissionOverwrite(view_channel=False)}
+                #   Creating a channel
+                PERMS = {ctx.guild.default_role:PermissionOverwrite(view_channel=False)}
 
-            for i in ch:
-                i = await ctx.guild.create_text_channel(i, overwrites=PERMS)
-
+                for i in ch:
+                    i = await ctx.guild.create_text_channel(i, overwrites=PERMS)
 
     @member.command(name="warn", description="Warn a community member for their behavior")              #   type: ignore
     async def warn(self, ctx:ApplicationContext, member:Member,                                         #   type: ignore

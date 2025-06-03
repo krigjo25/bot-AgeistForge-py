@@ -3,6 +3,7 @@ import discord as d
 from lib.utils.logger_config import CommandWatcher
 from lib.modal.BaseModal import ModalBase
 from lib.dictionaries.modal import ModalDictionary
+
 logger = CommandWatcher(name="Modal", dir=".logs")  # type: ignore
 logger.file_handler()
 
@@ -18,19 +19,21 @@ class Channel(ModalBase):
         #   Server announcements
         #   Create multiply channels
     """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):                                #   type: ignore
+        #   Channel Modal - Channel related actions.
+        super().__init__(*args, **kwargs)                               #   type: ignore      
 
-        match self.title.lower():
+                
+        match self.title.lower():                                       #   type: ignore  
                 case "announcement": self.announcement()
 
     def announcement(self):
 
-        modal = ModalDictionary().announcement()
+        modal = ModalDictionary().announcement()                        #   type: ignore
 
-        for i in modal: 
+        for i in modal:                                                 #   type: ignore
             self.create_input(
-                label = i['label'], 
-                placeholder=i.get('description'), 
-                style = i.get("style") or d.InputTextStyle.short,
-                required = bool(i.get("required")))
+                label = i['label'],                                     #   type: ignore
+                placeholder=i.get('description'),                       #   type: ignore
+                style = i.get("style") or d.InputTextStyle.short,       #   type: ignore
+                required = bool(i.get("required")))                     #   type: ignore
