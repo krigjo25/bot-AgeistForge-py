@@ -10,14 +10,8 @@ logger.file_handler()
 class Channel(ModalBase):
 
     """
-        Channel modals
-
-        #   Author : krigjo25
-        #   Date :   21.02-23
-        #   Last update: 22.02-23
-
-        #   Server announcements
-        #   Create multiply channels
+        Channel related modals
+        This class inherits from ModalBase and implements specific member-related modals.
     """
     def __init__(self, *args, **kwargs):                                #   type: ignore
         #   Channel Modal - Channel related actions.
