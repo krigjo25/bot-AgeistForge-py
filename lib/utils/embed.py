@@ -3,7 +3,6 @@ from discord import  Colour, Embed
 import datetime
 from typing import Optional
 
-from lib.utils.command_decorators import ClearEmbeds
 from lib.utils.exception_handler import ExceptionHandler
 
 
@@ -14,7 +13,6 @@ class EmbedFactory(object):
     """
 
     BASE_EMBED = Embed()
-
 
     @classmethod
     def _base_embed(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None, text:Optional[str] = None):

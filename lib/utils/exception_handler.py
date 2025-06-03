@@ -36,7 +36,7 @@ class NotFoundError(ExceptionHandler):
         self.message = message if message else "Resource not found"
         
 class SelfReferenceError(ExceptionHandler):
-    """ Raises when the requested member is not found """
+    """ Raises when the requested member is the Author of the request """
 
     def __init__(self, message:Optional[str] = None, code:int = 503):
         super().__init__(message, code)
