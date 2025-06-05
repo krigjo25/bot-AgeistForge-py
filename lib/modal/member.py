@@ -1,14 +1,12 @@
-#   Python responsories
-import datetime
 
 #   Discord responsory
 import discord as d
-from discord import utils, Colour
-from discord.ui import InputText, Modal
+
 
 from lib.modal.BaseModal import ModalBase
+from lib.dictionaries.modal import ModalDictionary
 
-class Member(ModalBase):
+class MemberModal(ModalBase):
 
     """
         Member related modals
@@ -21,25 +19,18 @@ class Member(ModalBase):
 
         match self.title.lower():                                       #   type: ignore  
             case "bug-report": self.bug_report()
-            case "member-report": self.member_report()
+            #case "member-report": self.discord_report()
             case "member-support": self.member_support()
-                
-
-    def member_report(self):
-
-        self.add_item(InputText(label = "Member", placeholder= "Member Name"))
-        self.add_item(InputText(label = "Uniform Resource Locator (URL)", style=d.InputTextStyle.long, required= True, placeholder= "https://google.com"))
-        self.add_item(InputText(label = "Reason", style=d.InputTextStyle.long, required= False, placeholder= ""))
-        self.embed.colour = d.Colour.dark_red()
-
-        return
 
     def member_support(self):
+        modal = ModalDictionary().discord_support()                        #   type: ignore
 
-        self.add_item(InputText(label = "Title Of The Document", placeholder= "eg. How To Use Commands", style=d.InputTextStyle.short))
-        self.add_item(InputText(label = "Image", placeholder= "Member", style=d.InputTextStyle.short))
-        self.add_item(InputText(label = "Challange", placeholder= "What do you need help with?", style=d.InputTextStyle.long))
-        self.embed.colour = d.Colour.dark_red()
-        return
+        for i in modal:                                                 #   type: ignore
+            self.create_input(
+                label = i['label'],                                     #   type: ignore
+                placeholder=i.get('description'),                       #   type: ignore
+                style = i.get("style") or d.InputTextStyle.short,       #   type: ignore
+                required = bool(i.get("required")))                     #   type: ignore
+
     
     def bug_report(self): pass

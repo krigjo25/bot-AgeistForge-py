@@ -1,7 +1,6 @@
 
 #   Python Repositories
 import datetime
-import humanfriendly as hf
 
 #   Discord Repositories
 import discord as d
@@ -44,7 +43,7 @@ class RoleModeration(commands.Cog):
 
         try :
             for i in ch:
-                if utils.utils.get(ctx.guild.text_channels, name = i): return 
+                if utils.get(ctx.guild.text_channels, name = i): return 
 
 
         except TypeError as e: print(e)
@@ -77,7 +76,6 @@ class RoleModeration(commands.Cog):
 
                 self.embed.timestamp = datetime.datetime.now()
                 await i.send(embed=self.embed)
-
 
     @role.command(name= "create", description = "Create a new Role") # type: ignore
     async def create(ctx:d.ApplicationContext): pass
@@ -196,7 +194,6 @@ class RoleModeration(commands.Cog):
     @role.command(name = "modify", description = "Modify role permissions") # type: ignore
     async def modify(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True), *, reason = None):  return
 
-    
     @role.after_invoke  # type: ignore
     async def clear_memory(self, ctx: d.ApplicationContext):
 
@@ -590,7 +587,6 @@ class ChannelModeration(commands.Cog):
         del ch, chlog, x, name  #   Clear some memory
 
         return
-
 
     @channel.after_invoke   # type: ignore
     async def clear_memory(self, ctx: d.ApplicationContext):

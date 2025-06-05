@@ -11,6 +11,7 @@ from discord.commands import SlashCommandGroup, ApplicationContext, Option
 from discord import Forbidden, Colour, utils, Member, Permissions, PermissionOverwrite
 
 from lib.modal.channel import Channel
+from lib.modal.member import MemberModal
 from lib.utils.moderation import ModerationUtils
 from lib.utils.logger_config import CommandWatcher
 from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
@@ -151,10 +152,10 @@ class MemberModeration(commands.Cog):
 
     @member.command(name= "announce", description="Make an announcement to the community")  #   type: ignore
     async def announcement(self, ctx:ApplicationContext):
-
-        """
-            Community announcements
-
-        """
         modal = Channel(title = "Announcement")
+        await ctx.send_modal(modal)
+    
+    @member.command(name="support", description="Report a bug in the server")
+    async def community_support(self, ctx:ApplicationContext):
+        modal = MemberModal(title="Member-support")  # type: ignore
         await ctx.send_modal(modal)
