@@ -58,3 +58,14 @@ class AuthorizationError(ExceptionHandler):
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else "You are not authorized to perform this action on this member"
+
+class DuplicationError(ExceptionHandler):
+    """ Base class for all exceptions """
+
+    def __init__(self, message:Optional[str] = None, code:int = 200):
+        super().__init__(message, code)
+        self.status_code = code
+        self.message = message if message else "An error occurred"
+
+        if not message:
+            self.message = "An error occurred"

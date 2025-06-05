@@ -12,6 +12,7 @@ from discord import Forbidden, Colour, utils, Member, Permissions, PermissionOve
 
 from lib.modal.channel import Channel
 from lib.modal.member import MemberModal
+from lib.selections.selections import SupportSelections
 from lib.utils.moderation import ModerationUtils
 from lib.utils.logger_config import CommandWatcher
 from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
@@ -158,4 +159,4 @@ class MemberModeration(commands.Cog):
     @member.command(name="support", description="Report a bug in the server")
     async def community_support(self, ctx:ApplicationContext):
         modal = MemberModal(title="Member-support")  # type: ignore
-        await ctx.send_modal(modal)
+        await ctx.respond("Select a Fitted topic", view=SupportSelections(), ephemeral=True)  # type: ignore

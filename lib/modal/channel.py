@@ -13,21 +13,25 @@ class Channel(ModalBase):
         Channel related modals
         This class inherits from ModalBase and implements specific member-related modals.
     """
-    def __init__(self, *args, **kwargs):                                #   type: ignore
+    def __init__(self, *args, **kwargs):                #   type: ignore
         #   Channel Modal - Channel related actions.
-        super().__init__(*args, **kwargs)                               #   type: ignore      
+        super().__init__(*args, **kwargs)               #   type: ignore      
+        self.custom_id = kwargs.get('custom_id', None)  #   type: ignore
+        
+        self.HandleModal()
+        
 
-                
-        match self.title.lower():                                       #   type: ignore  
-                case "announcement": self.announcement()
+    def HandleModal(self):
+         match self.title.lower():                                       #   type: ignore
+            case "announcement": self.announcement()
 
     def announcement(self):
 
-        modal = ModalDictionary().announcement()                        #   type: ignore
+        modal = ModalDictionary().announcement()                    #   type: ignore
 
-        for i in modal:                                                 #   type: ignore
+        for i in modal:                                             #   type: ignore
             self.create_input(
-                label = i['label'],                                     #   type: ignore
-                placeholder=i.get('description'),                       #   type: ignore
-                style = i.get("style") or d.InputTextStyle.short,       #   type: ignore
-                required = bool(i.get("required")))                     #   type: ignore
+                label = i['label'],                                 #   type: ignore
+                placeholder=i.get('description'),                   #   type: ignore
+                style = i.get("style") or d.InputTextStyle.short,   #   type: ignore
+                required = bool(i.get("required")))                 #   type: ignore

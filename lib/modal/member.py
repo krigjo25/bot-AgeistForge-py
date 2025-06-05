@@ -16,14 +16,18 @@ class MemberModal(ModalBase):
     def __init__(self, *args, **kwargs):                                #   type: ignore
         #   Channel Modal - Channel related actions.
         super().__init__(*args, **kwargs)                               #   type: ignore      
+        
+        self.HandleModal()
+        
 
-        match self.title.lower():                                       #   type: ignore  
-            case "bug-report": self.bug_report()
+    def HandleModal(self):
+         match self.title.lower():                                       #   type: ignore
+            #case "bug-report": self.bug_report()
+            case "member-support": self.member_support() 
             #case "member-report": self.discord_report()
-            case "member-support": self.member_support()
 
     def member_support(self):
-        modal = ModalDictionary().discord_support()                        #   type: ignore
+        modal = ModalDictionary().discord_support()                     #   type: ignore
 
         for i in modal:                                                 #   type: ignore
             self.create_input(
