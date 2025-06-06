@@ -12,7 +12,7 @@ from discord import Forbidden, Colour, utils, Member, Permissions, PermissionOve
 
 from lib.modal.channel import Channel
 from lib.modal.member import MemberModal
-from lib.selections.selections import SupportSelections
+from lib.selections.selections import SupportSelections, ApplicationSelections
 from lib.utils.moderation import ModerationUtils
 from lib.utils.logger_config import CommandWatcher
 from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
@@ -59,8 +59,8 @@ class MemberModeration(commands.Cog):
                 for i in ch:
                     i = await ctx.guild.create_text_channel(i, overwrites=PERMS)
 
-    @member.command(name="warn", description="Warn a community member for their behavior")              #   type: ignore
-    async def warn(self, ctx:ApplicationContext, member:Member,                                         #   type: ignore
+    @member.command(name="warn", description="Warn a community member for their behavior")      #   type: ignore
+    async def warn(self, ctx:ApplicationContext, member:Member,                                 #   type: ignore
                    *, reason:Option(str,"A paragraph / rule volaition statement", required = True)):    #   type: ignore
 
         """
@@ -80,7 +80,7 @@ class MemberModeration(commands.Cog):
             await mod_utils.send_member_message(ctx, member, action, reason)        #   type: ignore
             await ctx.respond(f"{member.name}'s has been {action}", ephemeral=True) #   type: ignore
 
-    @member.command(name = "sush", description="Mute a community member for their behavior")   #   type: ignore
+    @member.command(name = "sush", description="Mute a community member for their behavior")    #   type: ignore
     async def sush(self, ctx:ApplicationContext, member:Member, #   type: ignore
                    time:Option(str, "(1s)ecound / (1m)inute / (1h)our / (1d)ay", required = True), #   type: ignore
                    *, reason:Option(str, "Provide a reason to mute the member", required = True)): #   type: ignore
@@ -116,7 +116,7 @@ class MemberModeration(commands.Cog):
             await ctx.respond(f"{member.name}'s has been {action} for {time}", ephemeral=True)      #   type: ignore                                                              #   type: ignore
         return
 
-    @member.command(name = "lift", description="Lift a community member curse")   #   type: ignore
+    @member.command(name = "lift", description="Lift a community member curse")                 #   type: ignore
     async def lift(self, ctx:ApplicationContext, member:Member):
 
         mod_utils = ModerationUtils(self.bot)
@@ -134,7 +134,7 @@ class MemberModeration(commands.Cog):
 
             await ctx.respond(f"{member.name}'s has been {action}ed", ephemeral=True) #   type: ignore 
 
-    @member.command(name = "kick", description="Kick a community member")   #   type: ignore
+    @member.command(name = "kick", description="Kick a community member")                       #   type: ignore
     async def kick(self, ctx:ApplicationContext, member:Member, *, reason:Option(str, "Provide A reason to kick the member", required = True)):
 
         mod_utils = ModerationUtils(self.bot)
@@ -151,12 +151,17 @@ class MemberModeration(commands.Cog):
 
             await ctx.respond(f"{member.name}'s has been {action}ed", ephemeral=True) #   type: ignore 
 
-    @member.command(name= "announce", description="Make an announcement to the community")  #   type: ignore
+    @member.command(name= "announce", description="Make an announcement to the community")      #   type: ignore
     async def announcement(self, ctx:ApplicationContext):
         modal = Channel(title = "Announcement")
         await ctx.send_modal(modal)
     
-    @member.command(name="support", description="Report a bug in the server")
+    @member.command(name="support", description="Request support from the community")           #   type: ignore
     async def community_support(self, ctx:ApplicationContext):
         modal = MemberModal(title="Member-support")  # type: ignore
-        await ctx.respond("Select a Fitted topic", view=SupportSelections(), ephemeral=True)  # type: ignore
+        await ctx.respond("Select a Fitted topic", view=SupportSelections(), ephemeral=True)    # type: ignore
+
+    @member.command(name="bug-report", description="Report a bug in the server")                #   type: ignore
+    async def community_support(self, ctx:ApplicationContext):
+        modal = MemberModal(title="bug-report")  # type: ignore
+        await ctx.respond("Select Applications", view=ApplicationSelections(), ephemeral=True)    # type: ignore

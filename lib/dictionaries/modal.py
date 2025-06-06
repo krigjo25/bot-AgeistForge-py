@@ -27,30 +27,6 @@ class ModalDictionary(object):
 
         return (title, url, message)
 
-    def server_report(self): pass
-
-    def discord_report(self):
-        title = {
-
-            "label": "Report Title",
-            "description": "Discord name - Spamming(E.G Jhon Doe - Spamming)",
-            "required":True}
-
-
-        url = {
-            "label": "URL",
-            "description": "Image or a video link of the rule voilation",
-            "required": True,
-            }
-
-        message = {
-            "required": True,
-            "label": "Reason",
-            "description": "Please provide a detailed reason for the report",
-            "style": d.InputTextStyle.long}
-
-        return (title, url, message)
-    
     def server_support(self): pass
     def discord_support(self): 
         title = {
@@ -73,4 +49,33 @@ class ModalDictionary(object):
             "style": d.InputTextStyle.long}
 
         return (title, image, message)
-    def bugreport(self): pass
+
+    def bug_report(self):
+        title = {
+
+            "label": "title",
+            "description": "AppName | Descriptive title(e.g'GameServer | Unable to connect to the server')",
+            "required":True
+            }
+
+
+        image = {
+            "label": "image/video",
+            "description": "Image or a video link of the issue (e.g https://example.com/image.png)",
+            "required": True,
+            }
+        
+        
+        message = {
+            "required": True,
+            "label": "Reproduction-Steps",
+            "description": " e.g. '1. Open the game server\n2. Utilize the command /help\n3. Error message appears'",
+            "style": d.InputTextStyle.long}
+        
+        details = {
+            "required": True,
+            "label": "Additional-Details",
+            "description": " e.g. 'This issue occurs only on mobile devices'",
+            "style": d.InputTextStyle.long}
+
+        return (title, image, message, details)

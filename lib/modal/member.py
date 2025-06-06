@@ -22,9 +22,9 @@ class MemberModal(ModalBase):
 
     def HandleModal(self):
          match self.title.lower():                                       #   type: ignore
-            #case "bug-report": self.bug_report()
-            case "member-support": self.member_support() 
-            #case "member-report": self.discord_report()
+            case "bug-report": self.bug_report()
+            case "discord-support": self.member_support() 
+            case "server-support": self.member_support()
 
     def member_support(self):
         modal = ModalDictionary().discord_support()                     #   type: ignore
@@ -37,4 +37,11 @@ class MemberModal(ModalBase):
                 required = bool(i.get("required")))                     #   type: ignore
 
     
-    def bug_report(self): pass
+    def bug_report(self):
+            modal = ModalDictionary().bug_report()                      #   type: ignore
+            for i in modal:                                             #   type: ignore
+                self.create_input(
+                    label = i['label'],                                     #   type: ignore
+                    placeholder=i.get('description'),                       #   type: ignore
+                    style = i.get("style") or d.InputTextStyle.short,       #   type: ignore
+                    required = bool(i.get("required")))                     #   type: ignore
