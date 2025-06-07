@@ -121,27 +121,18 @@ class GithubAPI(APIConfig):
 
         return language
 
-    async def post_issue(self, data:dict[str, Union[str, list[str]]], endpoint:Optional[str] = None) -> Optional[dict[str, Any]]:
+    async def post_issue(self, data:dict[str, Union[str, list[str]]], endpoint:str) -> None:
         """
             Posting an issue to the repository
             API : https://api.github.com/repos/{owner}/{repo}/issues
         """
-
-        issue = {
-            "title": data.get('title'),
-            "body": data.get('message', 'No description provided.'), 
-            "assignees": data.get('assignees', ["krigjo25"]),
-            "labels": data.get('labels', ['unconfirmed-bug']),}
-
-
-        issue = {k: v for k, v in issue.items() if v is not None}  #   Filter out None values
-        print(issue)
+        #   Check for duplicated issues before making a request
         try:
-            response = self.post(endpoint=endpoint, head=self.head, data = issue)
+            
+            self._make_request_(endpoint, self.head, self.POST, data)
 
         except Exception as e:
-            #   TODO: Catch reponse Exception
-            #   TODO: Catch repository not found error
+            logger.error(f"An error occurred while posting the issue: {e.__class__.__name__}\nMessage from API: {self.API_URL}{endpoint}\n{e}")
             
             print(f"An error occurred while posting the issue: {e.__class__.__name__}\nMessage from API: {self.API_URL}{endpoint}\n{e}")
             

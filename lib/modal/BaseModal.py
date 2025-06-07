@@ -102,23 +102,35 @@ class ModalBase(Modal):
         """
         Placeholder for bug report handling.
         """
-        #  TODO: Fetch all repositories
+        
         api = GithubAPI(KEY=os.getenv('GithubIssueToken'))  #   type: ignore
-        repo = []
-        data['owner'] = "krigjo25"
-        print(data)
-        try:
-            response = api.get(f"{api.API_URL}/user/repos", head=api.head)  #   type: ignore
-            for i in response:
-                repo.append(i['name'].lower().split('-')[1] if '-' in i['name'] else i['name'])
-            
-            if data['app'].lower() not in repo:
-                raise ResourceNotFoundError(f"Repository '{data['app']}' not found. Please ensure the repository exists and is accessible.")
+        repo_found = False
+        
+        issue = {
+            "title": data.get('title'),
+            "assignees": data.get('assignees', ["krigjo25"]),
+            "labels": data.get('labels', ['unconfirmed-bug']),
+            "body": data.get('message', 'No description provided.'),}
 
-            await api.post_issue(data, f"repos/{data.get('owner')}/bot-AgeistForge-py/issues")  #   type: ignore
+        issue = {k: v for k, v in issue.items() if v is not None}  #   Filter out None values
+
+        try:
+            response = api._make_request_(f"{api.API_URL}/user/repos", head=api.head)  #   type: ignore
+
+            for i in response:
+                if str(data['app']).lower() in str(i['name']).lower():
+
+                    data['app'] = i['name']
+                    data['owner'] = i['owner']['login']
+
+                    repo_found = True
+
+                    break
+
+            if not repo_found:
+                raise ResourceNotFoundError(f"Couldn't find the repository for {data.get('app')}. Please check the app name and try again.")
+
+            await api.post_issue(issue, f"repos/{data.get('owner')}/{data.get('app')}/issues")  #   type: ignore
         
         except (ResourceNotFoundError, Exception) as e:
-            #   TODO: Catch reponse Exception
-            #   TODO: Catch repository not found error
-            
-            pass
+            print(f"Error: {e}")

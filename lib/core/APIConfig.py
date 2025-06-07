@@ -4,21 +4,16 @@
 import requests, json
 
 from time import perf_counter
-from dotenv import load_dotenv
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 from requests.exceptions import HTTPError, ConnectionError, Timeout, RequestException
 
+from dotenv import load_dotenv
+load_dotenv()
 
 #   Imporiting custom dependencies
 from lib.utils.logger_config import  APIWatcher
-from lib.utils.exceptions import ResourceNotFoundError
-#  Loading the environment variables
-load_dotenv()
-
-
 APILog = APIWatcher(name='API-Calls')
 APILog.file_handler()
-
 
 class APIConfig(object):
 
@@ -30,63 +25,51 @@ class APIConfig(object):
         self.API_KEY = KEY
         self.PATCH = PATCH
         self.DELETE = DELETE
-        
 
-    def get(self, endpoint: str, head: dict[str, str], timeout:Optional[int] = 30) -> Optional[dict[str, Union[str, list[str]]]]:
-
-        """
-            Calling the API
-
-        """
+    def _make_request_(self, endpoint: str, head: Dict[str, str], method: Optional[str] = "GET", data:Optional[Dict[str, Union[str, list[str]]]] = None, timeout: Optional[int] = 30) -> requests.Response:
 
         #   Initialize the start time
         start = perf_counter()
-        req = requests.get(f"{endpoint}", timeout=timeout, headers=head)
-        APILog.info(f"Attempting to fetch data from {self.API_URL}{endpoint}")
-        
-        try:
-            match (req.status_code):
-                case 200 | 201 | 202 | 204:
-                    APILog.warn(f"Request code :{req.status_code} Time elapsed: {perf_counter()-start}\n")
-                    return req.json()
+        playload = json.dumps(data) if data else None        
+        APILog.info(f"Attempting to '{method}' from {endpoint}\n")
 
-                case 401 | 403: raise ConnectionError("Unauthorized Access")
-                case 404: raise HTTPError("Resource not found")
-                case 410: raise ResourceNotFoundError("The requested resource is no longer available")
-                case 500 | 502 | 503 | 504: raise Timeout("The request timed out")
-                case _: raise RequestException(f"An Exception which was not encounted for arised. status code: {req.status_code}")
+        try:
+            match str(method).upper():
+                case self.GET:
+                    response = requests.get(endpoint, timeout=timeout, headers=head)
             
-        except (HTTPError, ConnectionError, Timeout, RequestException) as e: 
-            APILog.error(f"""
-                        Headers: {head}\nAPI Endpoint: {endpoint}\n
-                        Request code :{req.status_code}\nException arised : {e.__class__.__name__}\n
-                        Error: {e}, Time elapsed: {perf_counter()-start}\nPlease check the API endpoint and app network connection.\n""")
-            raise e
-        
-    def post(self,endpoint:str, head:dict[str, str], data:Optional[dict[str, Union[str, list[str]]]] = None, timeout:Optional[int] = 30) -> Optional[dict[str, Union[str, list[str]]]]:
-        """
-            Submitting data to the API
-            API : https://api.github.com/users/repos/{owner}/{repo}/import/issues
+                case self.POST: 
+                    response = requests.request(f"{self.POST}",f"{self.API_URL}{endpoint}", data = playload, timeout=timeout, headers=head)
 
-            :param endpoint: The API endpoint to submit data to
-            :param head: The headers to include in the request
-            :param data: The data to submit to the API
-            :param timeout: The timeout for the request in seconds
-        """
-        start = perf_counter()
-        playload = json.dumps(data) if data else None
-        print(endpoint, head, playload, head)
-        try:
-            req = requests.request(f"{self.POST}",f"{self.API_URL}{endpoint}", data = playload, timeout=timeout, headers=head)
-            APILog.info(f"Attempting to post data to {self.API_URL}{endpoint} {req.status_code} : {req.content}")
+                case self.PUT:
+                    raise NotImplementedError(f"{method} Not Implemented")
+                
+                case self.PATCH:
+                    raise NotImplementedError(f"{method} Not Implemented")
+                
+                case self.DELETE:
+                    raise NotImplementedError(f"{method} Not Implemented")
+
+                case _:
+                    raise ValueError(f"Unsupported HTTP method: '{method}'")
+
+            response.raise_for_status() #   Raise an HTTPError if not a 2xx response
+
+            APILog.info(f"'{self.API_URL}{endpoint}' Returned Ok.\n")
+            APILog.critical(f"Time elapsed: {perf_counter()-start}\n")
+            return response.json() if response.content else None        #   type: ignore
 
         except (HTTPError, ConnectionError, Timeout, RequestException) as e:
-            APILog.error(f"""Headers: {head}\nAPI Endpoint: {endpoint}\n
-                        Exception arised : {e.__class__.__name__}\n
-                        Error: {e}, Time elapsed: {perf_counter()-start}\n
-                        Headers: {head}\nPlease check the API endpoint and app network connection.\n""")
+            data_text = ""
+            if data:
+                data_text = f"{self.POST}ING Data : {data}"
+
+            APILog.error(f"Headers: {head}\nAPI Endpoint: {endpoint}\n")
+            APILog.error(f"An Exception Occurred: {e.__class__.__name__}\n")
+            APILog.error(f"Message from API: {self.API_URL}\n{endpoint}: {e}\n{data_text}\n")
+            APILog.critical(f"Time elapsed: {perf_counter()-start}\n")
+                        
             raise e
 
     def calculate_n(self, endpoint: str, header:dict[str, str]):
-
-        return self.get(endpoint = f"{self.API_URL}{endpoint}", head = header)
+        return self._make_request_(endpoint = f"{self.API_URL}{endpoint}", head = header)

@@ -164,4 +164,4 @@ class MemberModeration(commands.Cog):
     @member.command(name="bug-report", description="Report a bug in the server")                #   type: ignore
     async def community_support(self, ctx:ApplicationContext):
         modal = MemberModal(title="bug-report")  # type: ignore
-        await ctx.respond("Select Applications", view=ApplicationSelections(), ephemeral=True)    # type: ignore
+        await ctx.send_modal(modal)   # type: ignore

@@ -5,7 +5,7 @@ from typing import Optional
 class ExceptionHandler(Exception):
     """ Base class for all exceptions """
 
-    def __init__(self, message:Optional[str] = None, code:int = 400) -> None:
+    def __init__(self, message:Optional[str] = None, code:Optional[int] = 000) -> None:
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else "An error occurred"
@@ -46,15 +46,14 @@ class InvalidDurationError(ExceptionHandler):
     def __init__(self, message:Optional[str] = None, code:int = 400) -> None:
         super().__init__(message, code)
         self.status_code = code
-        self.message = message if message else "Invalid duration specified"
+        self.message = f"{code} : " + message if message else f"{code} : Invalid duration specified"
 
 class AuthorizationError(ExceptionHandler):
     """ Raises when the a user tries to authorize something forbidden """
 
     def __init__(self, message:Optional[str] = None, code:int = 403) -> None:
         super().__init__(message, code)
-        self.status_code = code
-        self.message = message if message else "You are not authorized to perform this action on this member"
+        self.message = f"{code} : " + message if message else f"{code} : You are not authorized to perform this action on this member"
 
 class DuplicationError(ExceptionHandler):
     """ Duplication error raises when a resource already exists """
