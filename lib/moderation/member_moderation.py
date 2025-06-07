@@ -8,16 +8,18 @@ load_dotenv()
 
 from discord.ext import  commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
-from discord import Forbidden, Colour, utils, Member, Permissions, PermissionOverwrite
+from discord import Forbidden, utils, Member, Permissions, PermissionOverwrite
 
 from lib.modal.channel import Channel
 from lib.modal.member import MemberModal
-from lib.selections.selections import SupportSelections, ApplicationSelections
+
 from lib.utils.moderation import ModerationUtils
-from lib.utils.logger_config import CommandWatcher
+
+from lib.selections.selections import SupportSelections
 from lib.utils.exceptions import SelfReferenceError, ResourceNotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
 
-logger = CommandWatcher(name="Member Moderation", dir=".logs") #   type: ignore
+from lib.utils.logger_config import CommandWatcher
+logger = CommandWatcher(name="Member Moderation") #   type: ignore
 logger.file_handler()
 
 class MemberModeration(commands.Cog):
@@ -72,7 +74,7 @@ class MemberModeration(commands.Cog):
             mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
 
         except (SelfReferenceError) as e:
-            await mod_utils.create_error_entry(ctx,e)
+            await mod_utils.create_error_entry(ctx, e)
 
         else:
             action = f"{ctx.command.name}ed"                                        #   type: ignore

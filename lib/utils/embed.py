@@ -26,7 +26,7 @@ class EmbedFactory(object):
                 case "title":
                     cls.BASE_EMBED.title = value
 
-                case "message":
+                case "description":
                     cls.BASE_EMBED.description = value
 
                 case "url":
@@ -38,9 +38,10 @@ class EmbedFactory(object):
                 case "thumbnail":
                     if value: cls.BASE_EMBED.set_thumbnail(url=value)
 
-                case _: pass
+                case _: 
+                    pass
 
-        if  add_fields: cls.add_new_fields(add_fields)
+        if add_fields: cls.add_new_fields(add_fields)
 
         if not text: text = f"Wish you a glorious day further,\nThe {team} Team"
 
@@ -52,15 +53,15 @@ class EmbedFactory(object):
     def add_new_fields(cls, dictionary: dict[str,str]):
 
         for key, value in dictionary.items():
-            cls.BASE_EMBED.add_field(name=key, value=value, inline=False)
+            cls.BASE_EMBED.add_field(name=key, value=value, inline=True)
 
     @classmethod
-    def info(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
+    def info(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None) -> Embed:
         """
         Sets the embed color to dark purple for informational messages.
         """
 
-        cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+        cls._base_embed(dictionary, author = author, team = team, avatar = avatar, add_fields= add_fields)
         cls.BASE_EMBED.colour = Colour.dark_blue()
         
         return cls.BASE_EMBED
@@ -96,8 +97,8 @@ class EmbedFactory(object):
         return cls.BASE_EMBED
     
     @classmethod
-    def create_embed(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
-        cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+    def create_embed(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None) -> Embed:
+        cls._base_embed(dictionary, author = author, team = team, avatar = avatar, add_fields=add_fields)
         cls.BASE_EMBED.colour = Colour.dark_purple()
 
         return cls.BASE_EMBED

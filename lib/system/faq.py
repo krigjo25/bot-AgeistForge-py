@@ -8,6 +8,7 @@ load_dotenv()
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
+from typing import Optional
 from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import CommandWatcher
 logger = CommandWatcher(name="FAQ") 
@@ -24,12 +25,12 @@ class FrequentlyAskedQuestions(commands.Cog):
     help_group = SlashCommandGroup(name = "help", description = "Help Commands for the bot")
     
     @help_group.command(name = "modules", description="Bot command menu", guild_ids=os.getenv("DEV_GUILD"))     #   type: ignore
-    async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False)): #   type: ignore
+    async def help_menu(self, ctx:ApplicationContext, arg:Optional[Option(str, "Optional: Enter a module's Name", required=False)] = None): #   type: ignore
     
         embed = EmbedFactory() #   type: ignore
-        match str(arg).lower(): #   type: ignore
-
+        match str(arg).lower():
             case "member module": embed = self.member_module()
+            case "community module": embed = self.community_module()
             case "channel module": embed = self.forum_moderation_module()
             case "administrator module": embed = self.administration_module()
             case _: embed = self.main_response(ctx) #   type: ignore
@@ -44,19 +45,42 @@ class FrequentlyAskedQuestions(commands.Cog):
         dictionary = dict[str, str]()
         
         dictionary['title'] = "Bot Command Menu"
+        
         dictionary['description'] = "This is the main help menu for the bot. It provides a list of available modules and their commands."
 
-        if ctx.author.guild_permissions.moderate_members:       #   type: ignore
+        if ctx.author.guild_permissions.moderate_members:   #   type: ignore
             fields['Member Module'] = "List of Available Moderation commands."
         
         if ctx.author.guild_permissions.manage_channels:    #   type: ignore
             fields['Channel Module'] = "List of Available Channel commands."
         
-        if ctx.author.guild_permissions.manage_roles:    #   type: ignore
+        if ctx.author.guild_permissions.manage_roles:       #   type: ignore
             fields['Role Module'] = "List of Available Role commands."
+
+        
+        if ctx.author.guild_permissions.administrator:      #   type: ignore
+            fields['Administration Module'] = "List of Available Administration commands."
+        fields['Community Module'] = "List of Available Community commands."
+
         embed.info(dictionary, add_fields=fields)
         return embed
 
+    def community_module(self):
+        
+        embed = EmbedFactory()
+        prefix = "/community"
+        
+        dictionary = {
+            'title': 'Community Module',
+            'description': 'This module provides commands for managing the community in the server.',
+        }
+        fields = dict[str, str]()
+        fields[f'{prefix} support'] = "- Provides support for the community"
+        fields[f'{prefix} report'] = "- Reports an issue in the community"
+        fields[f'{prefix} bug'] = "- Reports a bug / issue with the community bots / game"
+
+
+        return embed.create_embed(dictionary, add_fields=fields)
     def forum_moderation_module(self):
 
         embed = EmbedFactory()
@@ -100,4 +124,7 @@ class FrequentlyAskedQuestions(commands.Cog):
     def administration_module(self): 
         #   Initializing analysis commands
         #   Initializing auditlog commands
+        pass
+
+    def role_module(self):
         pass
