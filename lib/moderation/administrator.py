@@ -13,7 +13,7 @@ from discord.embeds import Embed, Colour
 from discord import utils, Option, ApplicationContext, SlashCommandGroup, Permissions, Member
 
 from lib.utils.logger_config import AdminWatcher
-from lib.utils.exception_handler import NotFoundError
+from lib.utils.exceptions import ResourceNotFoundError
 
 logger = AdminWatcher(name="administrator-module", dir=".logs")
 logger.file_handler()
@@ -96,10 +96,10 @@ class Administrator(commands.Cog):
 
         ch = utils.get(ctx.guild.channels, name='auditlog') #   Fetch channel
         try :
-            if not ch : raise NotFoundError(404,f"'**auditlog**' was not found.")
+            if not ch : raise ResourceNotFoundError(404,f"'**auditlog**' was not found.")
             
 
-        except NotFoundError as e :
+        except ResourceNotFoundError as e :
 
             self.embed.color = Colour.dark_red()
             self.embed.title =f"An Exception Occured"

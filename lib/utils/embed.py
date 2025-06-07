@@ -3,7 +3,7 @@ from discord import  Colour, Embed
 import datetime
 from typing import Optional
 
-from lib.utils.exception_handler import ExceptionHandler
+from lib.utils.exceptions import ExceptionHandler
 
 
 class EmbedFactory(object):

@@ -15,7 +15,7 @@ from lib.modal.member import MemberModal
 from lib.selections.selections import SupportSelections, ApplicationSelections
 from lib.utils.moderation import ModerationUtils
 from lib.utils.logger_config import CommandWatcher
-from lib.utils.exception_handler import SelfReferenceError, NotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
+from lib.utils.exceptions import SelfReferenceError, ResourceNotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
 
 logger = CommandWatcher(name="Member Moderation", dir=".logs") #   type: ignore
 logger.file_handler()
@@ -102,7 +102,7 @@ class MemberModeration(commands.Cog):
                     duration = member.communication_disabled_until - datetime.datetime.now()                                    #   type: ignore
                     raise InvalidDurationError(f"Could not sush **{member}**. **{member}** is already shushed for {duration}s") #   type: ignore
 
-        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError, AuthorizationError) as e: 
+        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, ResourceNotFoundError, AuthorizationError) as e: 
             await mod_utils.create_error_entry(ctx, e)                                                              #   type: ignore
 
         else:
@@ -123,7 +123,7 @@ class MemberModeration(commands.Cog):
         
         try: mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
 
-        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, NotFoundError, AuthorizationError) as e: 
+        except (SelfReferenceError, ExceptionHandler, InvalidDurationError, ResourceNotFoundError, AuthorizationError) as e: 
             await mod_utils.create_error_entry(ctx, e)  #   type: ignore
 
         else:

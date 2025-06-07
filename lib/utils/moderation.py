@@ -13,7 +13,7 @@ from discord.commands import ApplicationContext
 
 from lib.utils.embed import EmbedFactory as Embed
 from lib.utils.logger_config import CommandWatcher
-from lib.utils.exception_handler import NotFoundError, ExceptionHandler, SelfReferenceError, AuthorizationError
+from lib.utils.exceptions import ResourceNotFoundError, ExceptionHandler, SelfReferenceError, AuthorizationError
 
 logger = CommandWatcher(name="Moderation Utils", dir=".logs")  #   type: ignore
 logger.file_handler()
@@ -32,16 +32,16 @@ class ModerationUtils(commands.Cog):
             Fetch the exception and return it
         """
         if member == ctx.author: raise SelfReferenceError()
-        if not member: raise NotFoundError(f"{member.name} not found")          #   type: ignore
+        if not member: raise ResourceNotFoundError(f"{member.name} not found")          #   type: ignore
         if member.top_role >= ctx.author.top_role: raise AuthorizationError()   #   type: ignore
     
     async def create_log_entry(self, ctx:ApplicationContext, member:Member, action:str, reason:str, time:Optional[str | int] = None):
         channel = utils.get(ctx.guild.channels, name='auditlog')
 
         try:
-            if not channel: raise NotFoundError("Channel \"**auditlog**\" does not exists")
+            if not channel: raise ResourceNotFoundError("Channel \"**auditlog**\" does not exists")
 
-        except NotFoundError as e:
+        except ResourceNotFoundError as e:
             await self.create_error_entry(ctx, e)  #   type: ignore
         
         else:
