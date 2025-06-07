@@ -152,7 +152,7 @@ class MemberModeration(commands.Cog):
             await member.kick(reason=f"{reason}")
 
             await ctx.respond(f"{member.name}'s has been {action}ed", ephemeral=True) #   type: ignore 
-
+"""
     @member.command(name= "announce", description="Make an announcement to the community")      #   type: ignore
     async def announcement(self, ctx:ApplicationContext):
         modal = Channel(title = "Announcement")
@@ -166,3 +166,4 @@ class MemberModeration(commands.Cog):
     async def bug_report(self, ctx:ApplicationContext):
         modal = MemberModal(title="bug-report") 
         await ctx.send_modal(modal)
+"""
