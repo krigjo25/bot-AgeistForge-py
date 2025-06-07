@@ -42,7 +42,6 @@ class ModalBase(Modal):
         data = {}
         for  i in self.children:
             data[i.label] = i.value.lower() if isinstance(i.value, str) else i.value
-        print(f"Model title: {self.title}, data: {data}")  #   type: ignore
         match self.title.lower():                                                           #   type: ignore
             case "bug-report":  await self.report_issue(interaction, data)                    #   type: ignore
             case "member-report":  await self.forum_modal(interaction, data)                #   type: ignore

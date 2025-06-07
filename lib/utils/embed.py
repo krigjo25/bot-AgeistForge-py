@@ -5,100 +5,101 @@ from typing import Optional
 
 from lib.utils.exceptions import ExceptionHandler
 
-
 class EmbedFactory(object):
     """
     Utility class for creating and managing Discord embeds.
     Inherits from discord.Embed to provide additional functionality.
     """
 
-    BASE_EMBED = Embed()
-
     @classmethod
-    def _base_embed(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None, text:Optional[str] = None):
+    def _base_embed(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, fields:Optional[dict[str,str]] = None, text:Optional[str] = None, BOOL:bool = True) -> Embed:
         """
         Returns the base embed object.
         """
-
+        embed = Embed()
         for key, value in dictionary.items():
 
             match key.lower():
                 case "title":
-                    cls.BASE_EMBED.title = value
+                    embed.title = value
 
                 case "description":
-                    cls.BASE_EMBED.description = value
+                    embed.description = value
 
                 case "url":
-                    if value: cls.BASE_EMBED.url = value
+                    if value: embed.url = value
                 
                 case "image":
-                    if value: cls.BASE_EMBED.set_image(url=value)
+                    if value: embed.set_image(url=value)
 
                 case "thumbnail":
-                    if value: cls.BASE_EMBED.set_thumbnail(url=value)
+                    if value: embed.set_thumbnail(url=value)
 
                 case _: 
                     pass
 
-        if add_fields: cls.add_new_fields(add_fields)
+        if fields: 
+            for key, value in fields.items():
+                embed.add_field(name=key, value=value, inline= BOOL)
 
-        if not text: text = f"Wish you a glorious day further,\nThe {team} Team"
+        if not text: 
+            text = f"Wish you a glorious day further,\nThe {team} Team"
 
-        cls.BASE_EMBED.timestamp = datetime.datetime.now()
-        if author: cls.BASE_EMBED.set_author(name=f"{author}", icon_url=avatar or None)
-        if team: cls.BASE_EMBED.set_footer(text=text, icon_url=avatar or None)
-
-    @classmethod
-    def add_new_fields(cls, dictionary: dict[str,str]):
-
-        for key, value in dictionary.items():
-            cls.BASE_EMBED.add_field(name=key, value=value, inline=True)
+        embed.timestamp = datetime.datetime.now()
+        if team: embed.set_footer(text=text, icon_url=avatar or None)
+        if author: embed.set_author(name=f"{author}", icon_url=avatar or None)
+        return embed
 
     @classmethod
-    def info(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None) -> Embed:
+    def info(cls, dictionary: dict[str,str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, fields:Optional[dict[str,str]] = None) -> Embed:
         """
         Sets the embed color to dark purple for informational messages.
         """
 
-        cls._base_embed(dictionary, author = author, team = team, avatar = avatar, add_fields= add_fields)
-        cls.BASE_EMBED.colour = Colour.dark_blue()
+        embed = cls._base_embed(dictionary, author = author, team = team, avatar = avatar, fields= fields)
+        embed.colour = Colour.dark_blue()
         
-        return cls.BASE_EMBED
+        return embed
 
     @classmethod
     def error(cls, error:ExceptionHandler) -> Embed:
         """
             Creates an embed for exceptions.
         """
-        dictionary = {
-            "title": f"An {error.__class__.__name__} Occurred",
-            "message": error.message
-        }
+        dictionary = dict[str, str]()
+        dictionary["message"] = error.message
+        dictionary["title"] = f"An Exception Error Occured: {error.__class__.__name__}"
 
-        cls._base_embed(dictionary)
-        cls.BASE_EMBED.colour = Colour.dark_red()
+        embed = cls._base_embed(dictionary)
+        embed.colour = Colour.dark_red()
 
-        return cls.BASE_EMBED
+        return embed
 
     @classmethod
-    def critical(cls):
-        cls.BASE_EMBED.colour = Colour.red()
-        return cls.BASE_EMBED
+    def critical(cls, Error:ExceptionHandler) -> Embed:
+        
+        dictionary = dict[str, str]()
+        dictionary["message"] = Error.message
+        dictionary["title"] = f"Critical Error: {Error.__class__.__name__}"
+
+        embed = cls._base_embed(dictionary)
+        embed.colour = Colour.red()
+        
+        return embed
     
     @classmethod
     def warning(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
         """
         Sets the embed color to dark red for warning messages.
         """
-        cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
-        cls.BASE_EMBED.colour = Colour.dark_red()
+        embed = cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+        embed.colour = Colour.dark_red()
 
-        return cls.BASE_EMBED
+        return embed
     
     @classmethod
-    def create_embed(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, add_fields:Optional[dict[str,str]] = None) -> Embed:
-        cls._base_embed(dictionary, author = author, team = team, avatar = avatar, add_fields=add_fields)
-        cls.BASE_EMBED.colour = Colour.dark_purple()
+    def create_embed(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None, fields:Optional[dict[str,str]] = None) -> Embed:
+        embed = cls._base_embed(dictionary, author = author, team = team, avatar = avatar, fields= fields)
+        embed.colour = Colour.dark_purple()
 
-        return cls.BASE_EMBED
+        return embed

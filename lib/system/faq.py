@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 #   Discord Repositories
+from discord import Embed
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
@@ -10,7 +11,6 @@ from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import CommandWatcher
 logger = CommandWatcher(name="FAQ") 
 logger.file_handler()
-
 
 class FrequentlyAskedQuestions(commands.Cog):
 
@@ -24,20 +24,17 @@ class FrequentlyAskedQuestions(commands.Cog):
     @help_group.command(name = "modules", description="Bot command menu")     #   type: ignore
     async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False) = None): #   type: ignore
     
-        embed = EmbedFactory() #   type: ignore
+        #embed = EmbedFactory()
         match str(arg).lower():
             case "member module": embed = self.member_module()
             case "community module": embed = self.community_module()
             case "channel module": embed = self.forum_moderation_module()
-            case "administrator module": embed = self.administration_module()
             case _: embed = self.main_response(ctx) #   type: ignore
 
         await ctx.respond(embed = embed) #   type: ignore
 
     @staticmethod
-    def main_response():
-
-        embed = EmbedFactory()
+    def main_response(ctx:ApplicationContext):
 
         fields = dict[str, str]()
         dictionary = dict[str, str]()
@@ -60,11 +57,11 @@ class FrequentlyAskedQuestions(commands.Cog):
             fields['Administration Module'] = "List of Available Administration commands."
         fields['Community Module'] = "List of Available Community commands."
 
-        embed.info(dictionary, add_fields=fields)
+        embed = EmbedFactory.info(dictionary=dictionary, fields = fields, team="Support")
         return embed
 
     @staticmethod
-    def community_module():
+    def community_module() -> Embed:
         
         embed = EmbedFactory()
         prefix = "/community"
@@ -78,11 +75,11 @@ class FrequentlyAskedQuestions(commands.Cog):
         fields[f'{prefix} report'] = "- Reports an issue in the community"
         fields[f'{prefix} bug'] = "- Reports a bug / issue with the community bots / game"
 
-
-        return embed.create_embed(dictionary, add_fields=fields)
+        embed = embed.create_embed(dictionary, fields=fields)
+        return embed
     
     @staticmethod
-    def forum_moderation_module():
+    def forum_moderation_module() -> Embed:
 
         embed = EmbedFactory()
         prefix = "/channel"
@@ -102,7 +99,8 @@ class FrequentlyAskedQuestions(commands.Cog):
         fields[f'{prefix} SetSlowmode'] = "- Sets the slowmode of the given channel"
         fields[f'{prefix} Create'] = "- Creates a new channel with default settings (hidden)"
 
-        return embed.create_embed(dictionary, add_fields=fields)
+        embed = embed.info(dictionary, fields=fields)
+        return embed
     
     @staticmethod
     def member_module():
@@ -121,12 +119,28 @@ class FrequentlyAskedQuestions(commands.Cog):
         fields[f'{prefix} lift'] = '- Lifts the mute from a user'
         fields[f'{prefix} kick'] = '- Kicks a user from the server'
         fields[f'{prefix} sush'] = '- Mutes a user from using the server'
-        return embed.create_embed(dictionary, add_fields=fields)
+        
+        embed = embed.info(dictionary, fields=fields)
+        return embed
 
     @staticmethod
-    def administration_module():
-        pass
+    def role_module() -> Embed:
+        prefix = "/role"
 
-    @staticmethod
-    def role_module():
-        pass
+        dictionary = dict[str, str]()
+        dictionary['title'] = 'Administration Module'
+        dictionary['description'] = 'This module provides commands for managing the server.'
+
+        fields = dict[str, str]()
+        fields[f'{prefix} rename'] = "- Renames a role in the server"
+        fields[f'{prefix} delete'] = "- Deletes a role from the server"
+        fields[f'{prefix} list'] = "- Lists all the roles in the server"
+        fields[f'{prefix} add'] = "- Adds a role to a user in the server"
+        fields[f'{prefix} create'] = "- Creates a new role with default settings"
+        fields[f'{prefix} remove'] = "- Removes a role from a user in the server"
+        fields[f'{prefix} info'] = "- Provides information about a role in the server"
+        fields[f'{prefix} set_permissions'] = "- Sets the permissions of a role in the server"
+        
+
+        embed = EmbedFactory.create_embed(dictionary, fields=fields)
+        return embed
