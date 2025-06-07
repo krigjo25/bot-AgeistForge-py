@@ -3,15 +3,13 @@
 #   Discord Repositories
 from discord import Intents
 
-#   library Repositories - System module
 from lib.system.discordBot import DiscordBot
 from lib.utils.error_handler import ErrorHandler
 from lib.system.faq import FrequentlyAskedQuestions
 
-#   Moderation Utility
-from lib.moderation.moderation import MemberModeration
 from lib.moderation.administrator import Administrator
-from lib.moderation.forum_moderation import ChannelModeration, RoleModeration
+from lib.moderation.member_moderation import MemberModeration
+from lib.moderation.channel_moderation import ChannelModeration, RoleModeration
 
 
 class DiscordSetup():
@@ -61,7 +59,7 @@ class DiscordSetup():
         self.bot.add_cog(FrequentlyAskedQuestions(self.bot))
 
     def moderation_setup(self):
-        self.bot.add_cog(Administrator(self.bot))
-        self.bot.add_cog(RoleModeration(self.bot))
+        #self.bot.add_cog(Administrator(self.bot))
+        #self.bot.add_cog(RoleModeration(self.bot))
         self.bot.add_cog(MemberModeration(self.bot))
         self.bot.add_cog(ChannelModeration(self.bot))

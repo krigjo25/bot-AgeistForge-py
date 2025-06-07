@@ -6,13 +6,14 @@ from lib.system.botSetup import DiscordSetup
 
 load_dotenv()
 
-def RunBot ():
+def main ():
 
     disc = DiscordSetup()
+    
     disc.system_setup()
-    #disc.ModerationSetup()
+    disc.moderation_setup()
 
     disc.bot.run(os.getenv('DISCORD_BOT_TOKEN'))
 
 if __name__ == '__main__':
-        RunBot()
+        main()
