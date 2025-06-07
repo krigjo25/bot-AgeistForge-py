@@ -12,8 +12,8 @@ load_dotenv()
 
 #   Imporiting custom dependencies
 from lib.utils.logger_config import  APIWatcher
-APILog = APIWatcher(name='API-Calls')
-APILog.file_handler()
+API_request = APIWatcher(name='API-Request')
+API_request.file_handler()
 
 class APIConfig(object):
 
@@ -31,7 +31,7 @@ class APIConfig(object):
         #   Initialize the start time
         start = perf_counter()
         playload = json.dumps(data) if data else None        
-        APILog.info(f"Attempting to '{method}' from {endpoint}\n")
+        API_request.info(f"Attempting to '{method}' from {endpoint}\n")
 
         try:
             match str(method).upper():
@@ -55,8 +55,8 @@ class APIConfig(object):
 
             response.raise_for_status() #   Raise an HTTPError if not a 2xx response
 
-            APILog.info(f"'{self.API_URL}{endpoint}' Returned Ok.\n")
-            APILog.critical(f"Time elapsed: {perf_counter()-start}\n")
+            API_request.info(f"'{self.API_URL}{endpoint}' Returned Ok.\n")
+            API_request.critical(f"Time elapsed: {perf_counter()-start}\n")
             return response.json() if response.content else None        #   type: ignore
 
         except (HTTPError, ConnectionError, Timeout, RequestException) as e:
@@ -64,10 +64,10 @@ class APIConfig(object):
             if data:
                 data_text = f"{self.POST}ING Data : {data}"
 
-            APILog.error(f"Headers: {head}\nAPI Endpoint: {endpoint}\n")
-            APILog.error(f"An Exception Occurred: {e.__class__.__name__}\n")
-            APILog.error(f"Message from API: {self.API_URL}\n{endpoint}: {e}\n{data_text}\n")
-            APILog.critical(f"Time elapsed: {perf_counter()-start}\n")
+            API_request.error(f"Headers: {head}\nAPI Endpoint: {endpoint}\n")
+            API_request.error(f"An Exception Occurred: {e.__class__.__name__}\n")
+            API_request.error(f"Message from API: {self.API_URL}\n{endpoint}: {e}\n{data_text}\n")
+            API_request.critical(f"Time elapsed: {perf_counter()-start}\n")
                         
             raise e
 
