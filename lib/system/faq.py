@@ -1,6 +1,4 @@
 #   Frequently Asked Questions Module
-
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,7 +6,6 @@ load_dotenv()
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
-from typing import Optional
 from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import CommandWatcher
 logger = CommandWatcher(name="FAQ") 
@@ -24,8 +21,8 @@ class FrequentlyAskedQuestions(commands.Cog):
 
     help_group = SlashCommandGroup(name = "help", description = "Help Commands for the bot")
     
-    @help_group.command(name = "modules", description="Bot command menu", guild_ids=os.getenv("DEV_GUILD"))     #   type: ignore
-    async def help_menu(self, ctx:ApplicationContext, arg:Optional[Option(str, "Optional: Enter a module's Name", required=False)] = None): #   type: ignore
+    @help_group.command(name = "modules", description="Bot command menu")     #   type: ignore
+    async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False) = None): #   type: ignore
     
         embed = EmbedFactory() #   type: ignore
         match str(arg).lower():
@@ -37,7 +34,8 @@ class FrequentlyAskedQuestions(commands.Cog):
 
         await ctx.respond(embed = embed) #   type: ignore
 
-    def main_response(self, ctx:ApplicationContext):
+    @staticmethod
+    def main_response():
 
         embed = EmbedFactory()
 
@@ -65,7 +63,8 @@ class FrequentlyAskedQuestions(commands.Cog):
         embed.info(dictionary, add_fields=fields)
         return embed
 
-    def community_module(self):
+    @staticmethod
+    def community_module():
         
         embed = EmbedFactory()
         prefix = "/community"
@@ -81,7 +80,9 @@ class FrequentlyAskedQuestions(commands.Cog):
 
 
         return embed.create_embed(dictionary, add_fields=fields)
-    def forum_moderation_module(self):
+    
+    @staticmethod
+    def forum_moderation_module():
 
         embed = EmbedFactory()
         prefix = "/channel"
@@ -103,7 +104,8 @@ class FrequentlyAskedQuestions(commands.Cog):
 
         return embed.create_embed(dictionary, add_fields=fields)
     
-    def member_module(self):
+    @staticmethod
+    def member_module():
 
         embed = EmbedFactory()
         prefix = "/channel"
@@ -121,10 +123,10 @@ class FrequentlyAskedQuestions(commands.Cog):
         fields[f'{prefix} sush'] = '- Mutes a user from using the server'
         return embed.create_embed(dictionary, add_fields=fields)
 
-    def administration_module(self): 
-        #   Initializing analysis commands
-        #   Initializing auditlog commands
+    @staticmethod
+    def administration_module():
         pass
 
-    def role_module(self):
+    @staticmethod
+    def role_module():
         pass
