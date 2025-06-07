@@ -1,17 +1,16 @@
 #   Frequently Asked Questions Module
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 #   Discord Repositories
-from discord import Colour
-from discord.embeds import Embed
 from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
+from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import CommandWatcher
-
-from dotenv import load_dotenv
-load_dotenv()
-logger = CommandWatcher(name="FAQ", dir=".logs") #   type: ignore
+logger = CommandWatcher(name="FAQ") 
 logger.file_handler()
 
 
@@ -19,80 +18,86 @@ class FrequentlyAskedQuestions(commands.Cog):
 
     def __init__(self, bot:commands.Bot):
         self.bot = bot
-        self.base_embed = Embed(color=Colour.dark_purple())
 
-    help_group = SlashCommandGroup(name = "help", description = "Bot Documentation")
+        return
+
+    help_group = SlashCommandGroup(name = "help", description = "Help Commands for the bot")
     
     @help_group.command(name = "modules", description="Bot command menu", guild_ids=os.getenv("DEV_GUILD"))     #   type: ignore
     async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False)): #   type: ignore
     
+        embed = EmbedFactory() #   type: ignore
         match str(arg).lower(): #   type: ignore
 
-            case "member module": self.member_module()
-            case "channel module": self.channel_module()
-            case "administrator module": self.administration_module()
-            case _: self.main_response(ctx) #   type: ignore
+            case "member module": embed = self.member_module()
+            case "channel module": embed = self.forum_moderation_module()
+            case "administrator module": embed = self.administration_module()
+            case _: embed = self.main_response(ctx) #   type: ignore
 
-        await ctx.respond(embed = self.base_embed) #   type: ignore
+        await ctx.respond(embed = embed) #   type: ignore
 
     def main_response(self, ctx:ApplicationContext):
-        self.base_embed.title = "Help Menu"
-        self.base_embed.description = f""" 
-            For assistance with a spesific module, please utilize the command `/help module <module name>`.
-            Alternatively, the command `/help module` will return a list of all available modules."""
+
+        embed = EmbedFactory()
+
+        fields = dict[str, str]()
+        dictionary = dict[str, str]()
+        
+        dictionary['title'] = "Bot Command Menu"
+        dictionary['description'] = "This is the main help menu for the bot. It provides a list of available modules and their commands."
 
         if ctx.author.guild_permissions.moderate_members:       #   type: ignore
-            self.base_embed.add_field(name=f'Member Module', value="List of available moderation commands.", inline=True)
+            fields['Member Module'] = "List of Available Moderation commands."
         
         if ctx.author.guild_permissions.manage_channels:    #   type: ignore
-            self.base_embed.add_field(name=f'Channel Module', value="List of available Channel commands.", inline=True)
+            fields['Channel Module'] = "List of Available Channel commands."
         
         if ctx.author.guild_permissions.manage_roles:    #   type: ignore
-            self.base_embed.add_field(name=f'Role Module', value="List of available Role commands.", inline=True)
+            fields['Role Module'] = "List of Available Role commands."
+        embed.info(dictionary, add_fields=fields)
+        return embed
 
-        if ctx.author.guild_permissions.administrator:      #   type: ignore
-            self.base_embed.add_field(name=f'Admin Module', value="List of administration commands.", inline=True)
+    def forum_moderation_module(self):
 
-    def channel_module(self):
-
-        self.base_embed.title = 'Channel Moderation Module'
-        self.base_embed.color = Colour.dark_purple()
-
-        self.base_embed.add_field(name=f'/clear', value='- Clears messages in a channel', inline=True)
-        #self.base_embed.add_field(name=f'/channel Hide', value='- Hides the given channel ', inline=True)
-        #self.base_embed.add_field(name=f'/channel Lock', value='- Locks the given channel ', inline=True)
-        #self.base_embed.add_field(name=f'/channel Unlock', value='- Unlocks the given channel ', inline=True)
-        #self.base_embed.add_field(name=f'/channel Rename', value='- Renames the given channel ', inline=True)
-        self.base_embed.add_field(name=f'/channel Delete', value='- Deletes a channel from the server ', inline=True)
-        #self.base_embed.add_field(name=f'/channel SetTopic', value='- Sets the topic of the given channel ', inline=True)
-        self.base_embed.add_field(name=f'/channel Create', value='- Create a new channel default : hidden ', inline=True)
-        self.base_embed.add_field(name=f'/channel Clear', value= '- Clears the given channel Chat:bangbang:', inline=True)
+        embed = EmbedFactory()
+        prefix = "/channel"
         
-        self.base_embed.add_field(name=f'/channel SetSlowmode', value='- Sets the slowmode of the given channel ', inline=True)
+        dictionary = {
+            'title': 'Channel Module',
+            'description': 'This module provides commands for managing channels in the server.',
+        }
+        fields = dict[str, str]()
+        fields[f'{prefix} Hide'] = "- Hides the given channel"
+        fields[f'{prefix} Lock'] = "- Locks the given channel"
+        fields[f'{prefix} Unlock'] = "- Unlocks the given channel"
+        fields[f'{prefix} Rename'] = "- Renames the given channel"
+        fields[f'{prefix} delete'] = "- Deletes a channel from the server"
+        fields[f'{prefix} SetTopic'] = "- Sets the topic of the given channel"
+        fields[f'{prefix} clear'] = "- Clears the messages in the given channel"
+        fields[f'{prefix} SetSlowmode'] = "- Sets the slowmode of the given channel"
+        fields[f'{prefix} Create'] = "- Creates a new channel with default settings (hidden)"
+
+        return embed.create_embed(dictionary, add_fields=fields)
     
     def member_module(self):
 
-        self.base_embed.title = 'Member Moderation Module'
-        self.base_embed.color = Colour.dark_purple()
-
-        self.base_embed.add_field(name=f'/warn', value='- Warns a user', inline=True)
-        self.base_embed.add_field(name=f'/lift', value='- lifts the mute', inline=True)
-        self.base_embed.add_field(name=f'/kick', value='- Kicks a user from the server', inline=True)
-        self.base_embed.add_field(name=f'/sush', value='- Mutes a user from using the server', inline=True)
+        embed = EmbedFactory()
+        prefix = "/channel"
+        
+        dictionary = {
+            'title': 'Member Moderation Module',
+            'description': 'This module provides commands for managing channels in the server.',
+        }
+        fields = dict[str, str]()
+        fields[f'{prefix} ban'] = '- Bans a user from the server'
+        fields[f'{prefix} unban'] = '- Unbans a user from the server'
+        fields[f'{prefix} warn'] = '- Warns a user in the server'
+        fields[f'{prefix} lift'] = '- Lifts the mute from a user'
+        fields[f'{prefix} kick'] = '- Kicks a user from the server'
+        fields[f'{prefix} sush'] = '- Mutes a user from using the server'
+        return embed.create_embed(dictionary, add_fields=fields)
 
     def administration_module(self): 
         #   Initializing analysis commands
         #   Initializing auditlog commands
         pass
-    
-    @help_group.after_invoke #   type: ignore
-    async def clear_memory(self):
-
-        #   Clearing embeds
-        self.base_embed.clear_fields()                   #   type: ignore
-        self.base_embed.remove_image()                   #   type: ignore
-        self.base_embed.remove_author()                  #   type: ignore
-        self.base_embed.remove_footer()                  #   type: ignore
-        self.base_embed.description = ""                 #   type: ignore
-        self.base_embed.remove_thumbnail()               #   type: ignore
-        self.base_embed.color = Colour.dark_purple()     #   type: ignore

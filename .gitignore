@@ -1,8 +1,8 @@
 
-#   Ignore Folders
-__pycache__/
-.venv/
-.logs/
-#   Ignore Files
-.env
+# Ignore folders
+.logs
 .venv
+__pycache__
+
+# Ignore Python bytecode files
+.env

@@ -9,7 +9,8 @@ load_dotenv()
 def main ():
 
     disc = DiscordSetup()
-    #disc.system_setup()
+    
+    disc.system_setup()
     disc.moderation_setup()
 
     disc.bot.run(os.getenv('DISCORD_BOT_TOKEN'))
