@@ -6,7 +6,7 @@ from discord import utils, InputTextStyle, Interaction,  ChannelType
 from typing import Optional
 
 from lib.utils.embed import EmbedFactory as EF
-from lib.utils.exception_handler import NotFoundError,DuplicationError
+from lib.utils.exceptions import ResourceNotFoundError,DuplicationError
 
 class ModalBase(Modal):
     """
@@ -62,10 +62,10 @@ class ModalBase(Modal):
         threads = utils.get(ch.threads, name = data.get("title")) if ch else None               #   type: ignore
 
         try:
-            if not ch: raise NotFoundError(f"Couldn't find the {interaction.guild} forum channel.")
+            if not ch: raise ResourceNotFoundError(f"Couldn't find the {interaction.guild} forum channel.")
             if threads: raise DuplicationError(f"A thread with the title '{data.get('title')}' already exists in {ch.name}.\n ( {threads.jump_url} )")
         
-        except (NotFoundError, DuplicationError) as e:
+        except (ResourceNotFoundError, DuplicationError) as e:
             e = self.base_embed.error(e)
             await interaction.response.send_message(embed=e, ephemeral=True)
 
@@ -86,9 +86,9 @@ class ModalBase(Modal):
         ch = utils.get(interaction.guild.channels, type = ChannelType.news )                #   type: ignore
 
         try:
-            if not ch: raise NotFoundError(f"Couldn't find the {interaction.guild} news channel.")
+            if not ch: raise ResourceNotFoundError(f"Couldn't find the {interaction.guild} news channel.")
 
-        except (NotFoundError) as e:
+        except (ResourceNotFoundError) as e:
             e = self.base_embed.error(e)
             await interaction.response.send_message(embed=e, ephemeral=True)    
         
