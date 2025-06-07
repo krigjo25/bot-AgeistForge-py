@@ -15,8 +15,7 @@ class Channel(ModalBase):
     """
     def __init__(self, *args, **kwargs):                #   type: ignore
         #   Channel Modal - Channel related actions.
-        super().__init__(*args, **kwargs)               #   type: ignore      
-        self.custom_id = kwargs.get('custom_id', None)  #   type: ignore
+        super().__init__(*args, **kwargs)               #   type: ignore      e
         
         self.HandleModal()
         

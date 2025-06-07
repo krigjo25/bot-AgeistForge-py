@@ -155,13 +155,12 @@ class MemberModeration(commands.Cog):
     async def announcement(self, ctx:ApplicationContext):
         modal = Channel(title = "Announcement")
         await ctx.send_modal(modal)
-    
+
     @member.command(name="support", description="Request support from the community")           #   type: ignore
-    async def community_support(self, ctx:ApplicationContext):
-        modal = MemberModal(title="Member-support")  # type: ignore
+    async def community_support(self, ctx:ApplicationContext):                                  #
         await ctx.respond("Select a Fitted topic", view=SupportSelections(), ephemeral=True)    # type: ignore
 
     @member.command(name="bug-report", description="Report a bug in the server")                #   type: ignore
-    async def community_support(self, ctx:ApplicationContext):
-        modal = MemberModal(title="bug-report")  # type: ignore
-        await ctx.send_modal(modal)   # type: ignore
+    async def bug_report(self, ctx:ApplicationContext):
+        modal = MemberModal(title="bug-report") 
+        await ctx.send_modal(modal)
