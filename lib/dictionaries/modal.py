@@ -1,3 +1,5 @@
+
+from typing import Tuple, Union, Dict, Any
 import discord as d
 
 class ModalDictionary(object):
@@ -51,31 +53,35 @@ class ModalDictionary(object):
         return (title, image, message)
 
     def bug_report(self):
-        title = {
+        name = {
+            "required":False,
+            "label": "app",
+            "description": "Name of the application or game (e.g. 'MyGame')",}
 
+        title = {
             "label": "title",
-            "description": "AppName | Descriptive title(e.g'GameServer | Unable to connect to the server')",
-            "required":True
-            }
+            "required":False,
+            "description": "e.g. 'Game crashes on startup'"}
 
 
         image = {
+            "required": False,
             "label": "image/video",
             "description": "Image or a video link of the issue (e.g https://example.com/image.png)",
-            "required": True,
             }
         
         
         message = {
-            "required": True,
+            "required": False,
             "label": "Reproduction-Steps",
             "description": " e.g. '1. Open the game server\n2. Utilize the command /help\n3. Error message appears'",
-            "style": d.InputTextStyle.long}
+            "style": d.InputTextStyle.long
+            }
         
         details = {
-            "required": True,
+            "required": bool(False),
             "label": "Additional-Details",
             "description": " e.g. 'This issue occurs only on mobile devices'",
             "style": d.InputTextStyle.long}
 
-        return (title, image, message, details)
+        return (name, title, image, message, details)
