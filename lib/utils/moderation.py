@@ -207,6 +207,7 @@ class ModerationUtils(object):
                         reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
                         category = utils.get(interaction.guild.categories, name=category) if category else None,    #   type: ignore
                     )
+                
                 case "stage":
                     await interaction.guild.create_stage_channel(
                         topic = topic,
