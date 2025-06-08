@@ -9,14 +9,17 @@ from discord import utils, SlashCommandGroup, ApplicationContext, Option, Permis
 from lib.modal.channel import Channel
 from lib.utils.embed import EmbedFactory
 from lib.utils.exceptions import ExceptionHandler
-from lib.utils.logger_config import CommandWatcher
-logger = CommandWatcher(name="Channel Moderation")
+from lib.utils.logger_config import UtilsWatcher
+logger = UtilsWatcher(name="Channel Moderation")
 logger.file_handler()
 
 class ChannelModeration(commands.Cog):
 
     """
-        Commands for Moderators with manage_channels & manage_messages
+        This class contains commands for managing channels in a Discord server.
+        It allows forum moderators to create, delete, modify, and clear channels.
+        The commands are grouped under the "channel_group" command group.
+
     """
 
     def __init__(self, bot:commands.Bot):
@@ -26,30 +29,20 @@ class ChannelModeration(commands.Cog):
 
     
     #   Slash command group
-    channel = SlashCommandGroup(name = "channel", description = "Create something", default_member_permissions = Permissions(manage_channels = True))
-    
-    @channel.before_invoke  # type: ignore
-    async def check_channel(self, ctx:ApplicationContext):
+    channel_group = SlashCommandGroup(name = "channel", description = "Create something", default_member_permissions = Permissions(manage_channels = True))
 
-        ch = "auditlog"
-
-        category = utils.get(ctx.guild.categories, name = ".log")
-        channel = utils.get(ctx.guild.text_channels, name = "auditlog") #  Fetch channel
-        
-        if not category:
-            await self.create_category(ctx, ".log", "Automatically generated category for the auditlog channel")
-
-        if not channel:
-            await self.create_channel(ctx, ch, "Automatically generated channel for admin / moderator logging")
-
-        return
-
-    @channel.command(name = "create", description = "Create a channel") # type: ignore
+    @channel_group.command(name = "create", description = "Create a channel") # type: ignore
     async def create(self, ctx:ApplicationContext):
 
-        """
-            Creating a channel
-        """
+        """ 
+            Creating a channel 
+            Arguments:
+                #   ctx (ApplicationContext): The context of the command invocation.
+
+            Returns:
+                #   None
+            """
+        
         modal = Channel(title = "Custom-Channel")
         await ctx.send_modal(modal)
         """
@@ -160,16 +153,8 @@ class ChannelModeration(commands.Cog):
         return
         """
 
-    @channel.command(name = "delete", description = "Delete a channel") # type: ignore
+    @channel_group.command(name = "delete", description = "Delete a channel") # type: ignore
     async def delete(self, ctx:ApplicationContext, ch:Option(str, "Channel name", required = True)):
-
-        """
-            #   Delete a channel
-
-            #   Fetch both channels
-            #   Check if they exist
-            #   Delete the channel
-        """
 
         await self.check_channel(ctx)# Calling the function manually
         
@@ -198,7 +183,7 @@ class ChannelModeration(commands.Cog):
         del ch, chlog # Clear memory
         return 
 
-    @channel.command(name = "modify", description = "Modify a channel") # type: ignore
+    @channel_group.command(name = "modify", description = "Modify a channel") # type: ignore
     async def modify(self, ctx:ApplicationContext, channeltype, name, age_restricted = False, archived = False, category = None, delay = 0, locked = False, newname = None, overwrites = None, reason = None, region = None, require_tags = False, thread_slowmode = 0, topic = None, quality = None): #   Modify a channel
 
         ch = utils.get(ctx.guilchannels, name = name) #   Fetching the channel
@@ -340,7 +325,7 @@ class ChannelModeration(commands.Cog):
 
         return
 
-    @channel.command(name = "clear", description = "Clear a channel")   # type: ignore
+    @channel_group.command(name = "clear", description = "Clear a channel")   # type: ignore
     async def clear(self, ctx:ApplicationContext, name:str, x:Option(int, "Number of messages to clear", default = 100, min_value = 1, max_value = 1000)):
 
         """
@@ -421,28 +406,4 @@ class ChannelModeration(commands.Cog):
         else:
             #   Create a channel
             await ctx.guild.create_text_channel(name = name, reason = reason)
-        
-    @staticmethod
-    async def auditlog(ctx:ApplicationContext, name:str, reason:str):
-        """
-            #   Audit log for the channel moderation commands
-        """
-        ch = utils.get(ctx.guild.channels,  name = name)
-        try :
-            if not ch : raise ExceptionHandler(f"Channel \"{ch}\" does not exist in the server")
-
-        except ExceptionHandler as e:
-            embed = EmbedFactory.exception(e)
-
-            ctx.respond(embed = embed)
-
-        else:
-            #   Prepare & send the embed message
-            dictionary = dict[str, str]()
-            dictionary["title"] = f"Channel Moderation Audit Log"
-            dictionary["message"] = f"Channel moderation commands were executed by {ctx.author.name} in {ctx.channel.name} channel."
- 
-            embed = EmbedFactory.warning(e)
-
-            await ch.send(embed = embed)
 

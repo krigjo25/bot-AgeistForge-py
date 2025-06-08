@@ -10,7 +10,7 @@ from lib.utils.embed import EmbedFactory
 from lib.utils.moderation import ModerationUtils
 
 from lib.apis.github_api import GithubAPI
-from lib.utils.exceptions import ResourceNotFoundError,DuplicationError
+from lib.utils.exceptions import ResourceNotFoundError, DuplicationError, ExceptionHandler
 
 from lib.utils.logger_config import ModalWatcher
 logger = ModalWatcher(name="Modal")
@@ -21,6 +21,7 @@ class ModalBase(Modal):
         Base class for modals to inherit from.
         Contains common functionality for all modals.
     """
+
     def __init__(self, *args, **kwargs, ):              #   type: ignore
         super().__init__(*args, **kwargs)               #   type: ignore
         self.base_embed = EmbedFactory
@@ -68,7 +69,7 @@ class ModalBase(Modal):
         """
         Placeholder for forum modal handling.
         """
-        variable = self.title.lower().split('-') if self.title else None
+        variable = self.title.lower().split('-') if isinstance(list, self.title) else None
 
         ch = utils.get(interaction.guild.channels, name= variable[1], type = ChannelType.forum) #   type: ignore
         threads = utils.get(ch.threads, name = data.get("title")) if ch else None               #   type: ignore
@@ -86,13 +87,13 @@ class ModalBase(Modal):
             await interaction.response.send_message(embed=e, ephemeral=True)
         
         else:
-            responsebility = f"{interaction.user.display_name} has requested assistance from @RoleMention."                                     #   type: ignore
-            form = f""" **Name** :\n{interaction.user.display_name}\n **What is the issue? :**\n{data.get("Message")}\n\n{responsebility}"""    #   type: ignore
+            responsebility = f"{interaction.user.name} has requested assistance from @RoleMention."                                     #   type: ignore
+            form = f""" **Name** :\n{interaction.user.name}\n **What is the issue? :**\n{data.get("Message")}\n\n{responsebility}"""    #   type: ignore
 
             await ch.create_thread( name = data.get("title"),                                       #   type: ignore
                                     content = form,                                                 #   type: ignore
                                     auto_archive_duration = 60*24,
-                                applied_tags= [utils.get(ch.available_tags, name =variable[0])])    #   type: ignore
+                                    applied_tags= [utils.get(ch.available_tags, name =variable[0])])    #   type: ignore
 
     async def post_announcement_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
         ch = utils.get(interaction.guild.channels, type = ChannelType.news )                #   type: ignore
@@ -148,36 +149,35 @@ class ModalBase(Modal):
     async def channel_modal(self, interaction:Interaction, data:dict[str, Any]) -> None:
         mod_utils = ModerationUtils()
 
-        print(data.get('Channel Type'), data.get('Channel Name'), data.get('Channel Topic'), data.get('Category'))
-        for i in interaction.guild.channels: print(i.name, i.type)  #   type: ignore
-        topic = data.get('Channel Topic') if data.get('Channel Topic') else None
+        perm = str(data.get('Permissions', interaction.guild.default_role.permissions)).split(',')
+        ch = utils.get(interaction.guild.channels, name= data.get('Channel Name'))                                                          #   type: ignore
         category = utils.get(interaction.guild.categories, name=data.get('Category', None))                                                 #   type: ignore
-        ch = utils.get(interaction.guild.channels, name= data.get('Channel Name'))                            #   type: ignore
+        topic = data.get('Channel Topic', "No Topic Provided")
+        
 
         try: 
             if ch and category and ch.type:
                 raise DuplicationError(f"A channel with the name '{data.get('Channel Name')}' and Same Channel Type '{data.get('Channel Type')}' already exists in {interaction.guild.name}.")
-            print(ch, category, topic)
-           # if ch.topic and topic:                                                                                                          #   type: ignore
-                #raise DuplicationError(f"A Topic with the name '{data.get('Channel Topic')}' already exists in {interaction.guild.name}.")  #   type: ignore
-        
+
         except DuplicationError as e:
             await mod_utils.create_error_entry(interaction, e)
         
-        else: pass
-            #await self.create_channel_modal(interaction, data, category, topic)  #   type: ignore
+        else:
+            await self.create_channel_modal(interaction, data, perm, category, topic)  #   type: ignore
 
     @staticmethod
-    async def create_channel_modal( interaction:Interaction, data:dict[str, Any], category:Optional[Any] = None, topic:Optional[str] = None) -> None:
+    async def create_channel_modal( interaction:Interaction, data:dict[str, Any], perm : dict[str,Any], topic:str, category:Optional[str] = None) -> None:
         mod_utils = ModerationUtils()
         try:
-            await mod_utils.create_channel(name = data.get('Channel Name'), 
+            print(perm)
+            await mod_utils.create_channel(name = data.get('Channel Name', "New-Channel"), 
                                         interaction = interaction, 
-                                        channel_type = data.get('Channel Type'), 
+                                        channel_type = data.get('Channel Type', "text"), 
                                         category = category if category else None, 
-                                        topic = topic if topic else None, 
-                                        perms = data.get('Permissions'))
-        except Exception as e:
+                                        topic = topic,
+                                        perms = perm)
+        except ExceptionHandler as e:
+            print(e)
             await mod_utils.create_error_entry(interaction, e)
             
         #   TODO: Checking if the channel already exists

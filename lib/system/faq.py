@@ -8,8 +8,8 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
 from lib.utils.embed import EmbedFactory
-from lib.utils.logger_config import CommandWatcher
-logger = CommandWatcher(name="FAQ") 
+from lib.utils.logger_config import UtilsWatcher
+logger = UtilsWatcher(name="FAQ") 
 logger.file_handler()
 
 class FrequentlyAskedQuestions(commands.Cog):
