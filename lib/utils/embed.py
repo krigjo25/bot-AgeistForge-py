@@ -55,7 +55,6 @@ class EmbedFactory(object):
         """
         Sets the embed color to dark purple for informational messages.
         """
-
         embed = cls._base_embed(dictionary, author = author, team = team, avatar = avatar, fields= fields)
         embed.colour = Colour.dark_blue()
         
@@ -89,6 +88,16 @@ class EmbedFactory(object):
     
     @classmethod
     def warning(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
+        """
+        Sets the embed color to dark red for warning messages.
+        """
+        embed = cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
+        embed.colour = Colour.dark_red()
+
+        return embed
+    
+    @classmethod
+    def exception(cls, dictionary: dict[str, str], author: Optional[str] = None, team: Optional[str] = None, avatar: Optional[str] = None) -> Embed:
         """
         Sets the embed color to dark red for warning messages.
         """

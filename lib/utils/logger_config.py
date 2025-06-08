@@ -118,3 +118,7 @@ class CommandWatcher(Log):
     def __init__(self, name:Optional[str], dir:Optional[str] = None):
         super().__init__(dir = dir if dir else ".logs", name=f"{self.__class__.__name__} -- {name}.log")
 
+class ModalWatcher(Log):
+    def __init__(self, name:Optional[str], dir:Optional[str] = None):
+        super().__init__(dir = dir if dir else ".logs", name=f"{self.__class__.__name__} -- {name}.log")
+

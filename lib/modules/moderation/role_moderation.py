@@ -1,4 +1,5 @@
-#   Python Repositories
+#   Role Moderation Module
+
 import datetime
 
 #   Discord Repositories
@@ -13,18 +14,15 @@ class RoleModeration(commands.Cog):
         Commands for Moderators with manage_role
     """
 
-    def __init__(self, bot):
+    def __init__(self, bot:commands.Bot):
 
         self.bot = bot
-        self.embed = Embed()
-        self.now = datetime.datetime.now()
 
         return
 
-    #   Slash command group
-    role = d.SlashCommandGroup(name = "role", description = "Role mananger", default_member_permissions = d.Permissions(manage_roles = True))
+    role_group = d.SlashCommandGroup(name = "role", description = "Role mananger", default_member_permissions = d.Permissions(manage_roles = True))
 
-    @role.before_invoke # type: ignore
+    @role_group.before_invoke # type: ignore
     async def check_channel(self, ctx: d.ApplicationContext):
 
         channel = []
@@ -66,10 +64,10 @@ class RoleModeration(commands.Cog):
                 self.embed.timestamp = datetime.datetime.now()
                 await i.send(embed=self.embed)
 
-    @role.command(name= "create", description = "Create a new Role") # type: ignore
+    @role_group.command(name= "create", description = "Create a new Role") # type: ignore
     async def create(ctx:d.ApplicationContext): pass
 
-    @role.command(name = "delete", describe = "Delete a role")  # type: ignore
+    @role_group.command(name = "delete", describe = "Delete a role")  # type: ignore
     async def delete(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True) ):
 
         """
@@ -106,7 +104,7 @@ class RoleModeration(commands.Cog):
 
         return
  
-    @role.command(name = "remove", description = "Remove a member from a role") # type: ignore
+    @role_group.command(name = "remove", description = "Remove a member from a role") # type: ignore
     async def remove(self, ctx:d.ApplicationContext, member:d.Member, role:d.Option(str, "Server role", required = True), *, reason:d.Option(str, "Reason to remove the member from the role", required = True)):
 
         """
@@ -143,7 +141,7 @@ class RoleModeration(commands.Cog):
 
         return
 
-    @role.command( name = "set", description = "Set a member's new role")   # type: ignore
+    @role_group.command( name = "set", description = "Set a member's new role")   # type: ignore
     async def add(self, ctx:d.ApplicationContext, member:d.Member, role:d.Option(str, "Server role", required = True)):
 
         """
@@ -180,10 +178,10 @@ class RoleModeration(commands.Cog):
 
         return
 
-    @role.command(name = "modify", description = "Modify role permissions") # type: ignore
+    @role_group.command(name = "modify", description = "Modify role permissions") # type: ignore
     async def modify(self, ctx:d.ApplicationContext, role:d.Option(str, "Server role", required = True), *, reason = None):  return
 
-    @role.after_invoke  # type: ignore
+    @role_group.after_invoke  # type: ignore
     async def clear_memory(self, ctx: d.ApplicationContext):
 
         #   Clear some Memory

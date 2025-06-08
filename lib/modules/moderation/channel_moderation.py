@@ -6,6 +6,7 @@ import datetime
 from discord.ext import  commands
 from discord import utils, SlashCommandGroup, ApplicationContext, Option, Permissions, Forbidden, HTTPException, InvalidArgument
 
+from lib.modal.channel import Channel
 from lib.utils.embed import EmbedFactory
 from lib.utils.exceptions import ExceptionHandler
 from lib.utils.logger_config import CommandWatcher
@@ -30,34 +31,28 @@ class ChannelModeration(commands.Cog):
     @channel.before_invoke  # type: ignore
     async def check_channel(self, ctx:ApplicationContext):
 
-        print("test, before_invoke")
-        ch = ["auditlog", "member-reports", "member-support"]
+        ch = "auditlog"
 
-        category = utils.get(ctx.guild.categories, name = "log")
-
+        category = utils.get(ctx.guild.categories, name = ".log")
+        channel = utils.get(ctx.guild.text_channels, name = "auditlog") #  Fetch channel
+        
         if not category:
-            category = utils.get(ctx.guild.categories, name = "log")
-            await ctx.guild.create_category(name = "log", reason = "")
+            await self.create_category(ctx, ".log", "Automatically generated category for the auditlog channel")
 
-            for i in ch:
-                i = utils.get(ctx.guild.channels, name = i)#  Fetch channel
-                if not i: await ctx.channel.create_text_channel(name = i, category = category, reason = "Auto generated channel")
+        if not channel:
+            await self.create_channel(ctx, ch, "Automatically generated channel for admin / moderator logging")
 
         return
 
     @channel.command(name = "create", description = "Create a channel") # type: ignore
-    async def create(self, ctx:ApplicationContext, channeltype:Option(str, "eg. (forum / text / voice / stage)", required = True), name:Option(str, "Name of the channel eg. (general-talk, general)", required = True), age_restricted:Option(bool, "Is the channel restricted for users below 18? (True / False)", default = False) , bitrate:Option(int, "bitrate (voic channel)", required = False, default = 0),  category:Option(str, "Name of the category. (GENERAL, GENERAL TALK)", required = False, default = None), delay: Option(int,"Slowmode counter(s)", default = 0), user_limit:Option(int,"User limitation for the channel (Voice channel parameter)", required = False, default = 0), perm:Option(str, "permissions (custom / member / moderator / admin)", required = False, default = None), role:Option(str, "Server role name", required = False), *topic:Option(str, "Tell the users about the channel subject (general-talk, general)", required = False, default = None), **reason:Option(str, "Reason for creation of the channel", required = False, default = None)):
+    async def create(self, ctx:ApplicationContext):
 
         """
             Creating a channel
-
-            
-
-            #   Checking the condtiions
-            #   Create a channel
         """
-
-        await self.check_channel(ctx)# Calling the function manually
+        modal = Channel(title = "Custom-Channel")
+        await ctx.send_modal(modal)
+        """
         arg = [{ #  Initializing a list with the parameters
                 "channeltype":channeltype, "channel_name": name, "category":category, "channel_permissions": perm,
                 "slow_mode": delay,  "topic":reason.get("topic"), "reason":reason.get("reason"), # Text channels
@@ -65,10 +60,11 @@ class ChannelModeration(commands.Cog):
                 }]
 
         for i in arg:#   Fetch the channel from the guild
-            chlog = utils.get(ctx.guilchannels, name = "auditlog")
-            ch = utils.get(ctx.guilchannels, name = i["channel_name"])
-            category = utils.get(ctx.guilcategories, name = i["category"])
-            role = utils.get(ctx.guilroles, name = i["channel_roles"])
+            
+            self.create_category(ctx, i["category"], i["reason"])
+            self.create_channel(ctx, i["channel_name"], i["reason"])
+            
+            role = utils.get(ctx.guild.roles, name = i["channel_roles"])
 
         try :#   Checking if the condition below is met, if the condition is met then raise exception
  
@@ -162,6 +158,7 @@ class ChannelModeration(commands.Cog):
         del channeltype, chlog, ch, arg
 
         return
+        """
 
     @channel.command(name = "delete", description = "Delete a channel") # type: ignore
     async def delete(self, ctx:ApplicationContext, ch:Option(str, "Channel name", required = True)):
@@ -204,7 +201,6 @@ class ChannelModeration(commands.Cog):
     @channel.command(name = "modify", description = "Modify a channel") # type: ignore
     async def modify(self, ctx:ApplicationContext, channeltype, name, age_restricted = False, archived = False, category = None, delay = 0, locked = False, newname = None, overwrites = None, reason = None, region = None, require_tags = False, thread_slowmode = 0, topic = None, quality = None): #   Modify a channel
 
-        await self.check_channel(ctx)# Calling the function manually
         ch = utils.get(ctx.guilchannels, name = name) #   Fetching the channel
 
         try :#  Checking for exceptions
@@ -389,12 +385,49 @@ class ChannelModeration(commands.Cog):
 
         return
     
-    @classmethod
-    def auditlog(cls, ctx:ApplicationContext):
+    @staticmethod
+    async def create_category(ctx:ApplicationContext, category:str, reason:str):
+        """
+            #   Create a category for the auditlog channel
+        """
+        try:
+            if not category: raise Exception("Category name can not be empty")
+            elif len(category) > 100: raise Exception("Category name can not be longer than 100 characters")
+
+        except Exception as e:
+            embed = EmbedFactory.exception(e)
+
+            ctx.respond(embed = embed)
+
+        else:
+            await ctx.guild.create_category(name = category, reason = reason)
+
+    @staticmethod
+    async def create_channel(ctx:ApplicationContext, name:str, channel_type:str, permissions:str,reason:str):
+        """
+            #   Create a channel
+        """
+        ch = utils.get(ctx.guild.channels,  name = name)
+
+        try:
+            if ch: raise Exception(f"Channel \"{ch}\" Already exists in the server")
+            if len(name) > 100: raise Exception("Channel name can not be longer than 100 characters")
+
+        except Exception as e:
+            embed = EmbedFactory.exception(e)
+
+            ctx.respond(embed = embed)
+
+        else:
+            #   Create a channel
+            await ctx.guild.create_text_channel(name = name, reason = reason)
+        
+    @staticmethod
+    async def auditlog(ctx:ApplicationContext, name:str, reason:str):
         """
             #   Audit log for the channel moderation commands
         """
-        ch = utils.get(ctx.guilchannels,  name = "auditlog")
+        ch = utils.get(ctx.guild.channels,  name = name)
         try :
             if not ch : raise ExceptionHandler(f"Channel \"{ch}\" does not exist in the server")
 
@@ -412,8 +445,4 @@ class ChannelModeration(commands.Cog):
             embed = EmbedFactory.warning(e)
 
             await ch.send(embed = embed)
-
-    @channel.after_invoke  # type: ignore
-    async def after_invoke(self, ctx:ApplicationContext):
-        self.auditlog(ctx)
 
