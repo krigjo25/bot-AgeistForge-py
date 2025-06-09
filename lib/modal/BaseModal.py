@@ -1,10 +1,10 @@
 #   The modal system works
 
 import os
-from typing import Optional, Any, List
+from typing import Optional, Any, Dict
 
 from discord.ui import InputText, Modal
-from discord import utils, InputTextStyle, Interaction,  ChannelType
+from discord import utils, InputTextStyle, Interaction,  ChannelType, CategoryChannel
 
 from lib.utils.embed import EmbedFactory
 from lib.utils.moderation import ModerationUtils
@@ -150,32 +150,34 @@ class ModalBase(Modal):
         mod_utils = ModerationUtils()
 
         topic = data.get('Channel Topic', "No Topic Provided")
-        ch = utils.get(interaction.guild.channels, name= data['Channel Name'])                                          #   type: ignore
-        perm = str(data.get('Permissions', interaction.guild.default_role.permissions)).split(',')                      #   type: ignore
 
-        # How can i check if the cateogry is None?
-        category = next((i for i in interaction.guild.categories if str(i).lower() == data.get('Category', str(interaction.channel.category.name).lower())), None)  #   type: ignore
-        print(f"Category: {category}, current category: {interaction.channel.category}")                                                                                  #   type: ignore
+        ch = utils.get(interaction.guild.channels, name= data['Channel Name'])                                          #   type: ignore
+        perm = str(data.get('Permissions', interaction.guild.default_role.permissions)).split(',')                     
+
+        category = next((i for i in interaction.guild.categories if str(i).lower() == data.get('Category', str(interaction.channel.category).lower())), None)  #   type: ignore
+
         try:
             if category:
                 if ch in category.channels and ch.type == str(data['Channel Type']).lower():                                  #   type: ignore
                     raise DuplicationError(f"A channel with the name '{data.get('Channel Name')}' and Same Channel Type '{data.get('Channel Type')}' already exists in {interaction.guild.name}.")
                 
         except DuplicationError as e: await mod_utils.create_error_entry(interaction, e)
-        #else: await self.create_channel_modal(interaction, data, perm, category, topic) 
+        else: await self.create_channel_modal(interaction, data, topic, perm, category) 
 
     @staticmethod
-    async def create_channel_modal( interaction:Interaction, data:dict[str, Any], perm : List[str], topic:str, category:str) -> None:
+    async def create_channel_modal( interaction:Interaction, data:dict[str, Any], topic:str, perm:str, category:Optional[CategoryChannel] = None, nsfw:bool = False) -> None:
         mod_utils = ModerationUtils()
+        #perm =mod_utils.handle_permissions(perm, interaction.guild)  #   type: ignore
         try:
-            print(perm)
+            print(category)
+
             await mod_utils.create_channel(name = data['Channel Name'], 
                                         interaction = interaction, 
                                         channel_type = str(data['Channel Type']).lower(), 
-                                        category = interaction.channel.category,  #   type: ignore
+                                        category = category,  #   type: ignore
                                         topic = topic,
-                                        nsfw= False,
-                                        perms = interaction.channel.category) #   #   type: ignore
+                                        perm = {},
+                                        nsfw= nsfw,)
         except ExceptionHandler as e:
             print(e)
             await mod_utils.create_error_entry(interaction, e)

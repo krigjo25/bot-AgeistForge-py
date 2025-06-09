@@ -7,7 +7,7 @@ load_dotenv()
 
 #   Discord Repositories
 
-from discord import utils, Member, Interaction, PermissionOverwrite, ApplicationContext
+from discord import utils, Member, Interaction, PermissionOverwrite, ApplicationContext, Role
 
 from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import UtilsWatcher
@@ -159,7 +159,7 @@ class ModerationUtils(object):
     
         await member.send(f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {server}.\n\n{member_message}Thank you for your patient and understanding\n Sincerely Moderation team")  #   type: ignore
 
-    async def create_channel(self, name:str, interaction:Interaction, channel_type:str, topic:str, nsfw: bool, category:Optional[str] = None, perms:Optional[Dict[str, Any]] = None) -> None:
+    async def create_channel(self, name:str, interaction:Interaction, channel_type:str, topic:str, perm:Dict[Role | Member, PermissionOverwrite], nsfw:bool = False, category:Optional[str] = None) -> None:
         
         """
             Create a channel in the server.
@@ -181,21 +181,22 @@ class ModerationUtils(object):
             match (channel_type.lower()):
                 
                 case "text":
+                    print(category)
                     await interaction.guild.create_text_channel(
                         nsfw = nsfw,
                         name = name,
                         topic = topic,
-                        overwrites = perms if perms else None,
+                        overwrites = perm,
                         reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category) if category else None,    #   type: ignore
+                        category = category,    #   type: ignore
                     )
 
                 case "voice":
                     await interaction.guild.create_voice_channel(
                         name = name,
-                        overwrites = perms if perms else None,
+                        overwrites = perm,
                         reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category) if category else None,    #   type: ignore
+                        category = utils.get(interaction.guild.categories, name=category)
                     )
                 
                 case "forum":
@@ -203,17 +204,17 @@ class ModerationUtils(object):
                         nsfw = nsfw,
                         name = name,
                         topic = topic,
-                        overwrites = perms if perms else None,
+                        overwrites = perm,
                         reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category) if category else None,    #   type: ignore
+                        category = utils.get(interaction.guild.categories, name=category),    #   type: ignore
                     )
                 
                 case "stage":
                     await interaction.guild.create_stage_channel(
                         topic = topic,
-                        overwrites = perms if perms else None,
+                        overwrites = perm,
                         reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category) if category else None)    #   type: ignore
+                        category = utils.get(interaction.guild.categories, name=category))    #   type: ignore
 
                 case _:
                     raise TypeErrorHandler(f"Channel type '{channel_type}' is not recognized or implemnted yet. Please use one of the following: Text, Voice, Forum, Stage, News.")
@@ -239,3 +240,5 @@ class ModerationUtils(object):
                 None
         """
         raise NotImplementedError("This method is not implemented yet, please use the Channel class to create a thread")
+    async def handle_permissions(self, perm:str)-> PermissionOverwrite:
+        pass
