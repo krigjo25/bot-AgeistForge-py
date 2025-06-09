@@ -124,6 +124,5 @@ class ModalDictionary(object):
         perm['label'] = "Channel Permissions"
         perm['style'] = d.InputTextStyle.long
         perm['description'] = "Select the permissions for the channel (/help permissions for more info) *Separated by **','**"
-        
-        
+
         return (name, channeltype, category, topic, perm)
