@@ -8,8 +8,9 @@ from discord import utils, SlashCommandGroup, ApplicationContext, Option, Permis
 
 from lib.modal.channel import Channel
 from lib.utils.embed import EmbedFactory
-from lib.utils.exceptions import ExceptionHandler
 from lib.utils.logger_config import UtilsWatcher
+from lib.utils.moderation import ModerationUtils
+from lib.utils.exceptions import ExceptionHandler
 logger = UtilsWatcher(name="Channel Moderation")
 logger.file_handler()
 
@@ -25,168 +26,39 @@ class ChannelModeration(commands.Cog):
     def __init__(self, bot:commands.Bot):
 
         self.bot = bot
-        self.now = datetime.datetime.now()
-
     
     #   Slash command group
     channel_group = SlashCommandGroup(name = "channel", description = "Create something", default_member_permissions = Permissions(manage_channels = True))
 
     @channel_group.command(name = "create", description = "Create a channel") # type: ignore
     async def create(self, ctx:ApplicationContext):
-
-        """ 
-            Creating a channel 
-            Arguments:
-                #   ctx (ApplicationContext): The context of the command invocation.
-
-            Returns:
-                #   None
-            """
         
         modal = Channel(title = "Custom-Channel")
         await ctx.send_modal(modal)
+
+    @channel_group.command(name = "delete", description = "Deletes the channel which the user interacts with") # type: ignore
+    async def delete(self, ctx:ApplicationContext, reason:Option(str, "Reason for deletion", required = True)):
+
         """
-        arg = [{ #  Initializing a list with the parameters
-                "channeltype":channeltype, "channel_name": name, "category":category, "channel_permissions": perm,
-                "slow_mode": delay,  "topic":reason.get("topic"), "reason":reason.get("reason"), # Text channels
-                "nsfw": bool(age_restricted), "bitrate": bitrate, "user_limit": user_limit, "channel_roles":role #  Voice and stage channels
-                }]
-
-        for i in arg:#   Fetch the channel from the guild
-            
-            self.create_category(ctx, i["category"], i["reason"])
-            self.create_channel(ctx, i["channel_name"], i["reason"])
-            
-            role = utils.get(ctx.guild.roles, name = i["channel_roles"])
-
-        try :#   Checking if the condition below is met, if the condition is met then raise exception
- 
-            if str(channeltype) not in ["forum", "text", "voice", "stage",  ]: raise Exception(" channeltype argument, has only four types, (forum / text / voice or stage )")
-            if not chlog : raise Exception("Channel auditlog does not exists")
-
-            for i in arg:
-                if i["slow_mode"] < 0: raise ValueError("**delay** argument has to be greater than 0")
-                if i["bitrate"] < 0: raise ValueError("Bitrate argument has to be  equal (or grater) to 0")
-                 
-        except (ValueError, TypeError, Exception) as e:#   If something goes wrong output a message
-
-            self.embetitle = "An Exception Occured"
-            self.embedescription = f"{e}"
-            self.embecolor = Colour.dark_red()
-            self.embetimestamp = self.now
-            await ctx.respond(embed = self.embed)
-
-            return
-
-        else:#   If everythings fine, continue 
-
-            for i in arg:
-                
-                if i["category"] != None:#   Automatically creates a category if it does not exists
-                    if not category :await ctx.guilcreate_category_channel(name = i["category"], reason = "User implied category, did not exist.")
-                    else:
-                        for j in ctx.guilcategories:
-                            if category == j.name: i["category"] = int(j.id)
-
-                if i["channel_permissions"] == None: i["channel_permissions"] = await ChannelPermissions().SelectPermissions(ctx, i["channel_permissions"])
-                else:i["channel_permissions"] = await ChannelPermissions().SelectPermissions(i["channel_permissions"], role)
-
-                match str(i["channeltype"]).lower(): #   Matching the type of channel
-
-                    case "forum":
-
-                        try: await ctx.guilcreate_forum_channel(name = i["channel_name"], category = utils.get(ctx.guilcategories, name = i["category"]), snsfw = i["nsfw"], slowmode_delay = i["slow_mode"], topic = i["topic"], reason = i["reason"], overwrites = dict(i["channel_permissions"]))
-                        except (Forbidden, HTTPException, InvalidArgument) as e: 
-
-                            self.embetitle = "An Exception Occured"
-                            self.embedescription = f"{e}"
-                            self.embecolor = Colour.dark_red()
-                            ctx.respond(embed = self.embed)
-
-                            return
-
-                    case "text":
-                        try :await ctx.guilcreate_text_channel(name = i["channel_name"], category = utils.get(ctx.guilcategories, name = i["category"]), nsfw = i["nsfw"], slowmode_delay = i["slow_mode"], topic = i["topic"], reason = i["reason"], overwrites = dict(i["channel_permissions"]))
-                        except (Forbidden, HTTPException, InvalidArgument) as e: 
-
-                            self.embetitle = "An Exception Occured"
-                            self.embedescription = f"{e}"
-                            self.embecolor = Colour.dark_red()
-                            await ctx.respond(embed = self.embed)
-
-                            return
-
-                    case "voice":
-                        try: await ctx.guilcreate_voice_channel(name = i["channel_name"], category = utils.get(ctx.guilcategories, name = i["category"]),bitrate = i["bitrate"], user_limit = i["user_limit"], topic = i["topic"], reason = i["reason"], overwrites = i["channel_permissions"])
-                        except (Forbidden, HTTPException, InvalidArgument) as e: 
-
-                            self.embetitle = "An Exception Occured"
-                            self.embedescription = f"{e}"
-                            self.embecolor = Colour.dark_red()
-                            ctx.respond(embed = self.embed)
-
-                            return
-
-                    case "stage":
-                        try: await ctx.guilcreate_stage_channel(name = i["channel_name"], category = utils.get(ctx.guilcategories, name = i["category"]), topic = i["topic"], reason = i["channel_permissions"])
-                        except (Forbidden, HTTPException, InvalidArgument) as e: 
-
-                            self.embetitle = "An Exception Occured"
-                            self.embedescription = f"{e}"
-                            self.embecolor = Colour.dark_red()
-                            ctx.respond(embed = self.embed)
-
-                            return
-
-            self.embecolor = Colour.dark_red()
-            self.embetimestamp = datetime.datetime.now()
-            self.embetitle = f"{ctx.author.name} has created a  {str(channeltype).capitalize()} Channel, called **\"{name}\"**"
-
-            await chlog.send(embed=self.embed)
-
-        #   Clearing some space
-        del name, bitrate, category
-        del delay, user_limit, role
-        del topic, reason, age_restricted
-        del channeltype, chlog, ch, arg
-
-        return
+            Limitations:
+                - The commands works only in current channel.
         """
+        #   Fetch the function name and split it to get the command name
+        modUtils = ModerationUtils()
+        func = modUtils.fetch_function_name(self.delete)
 
-    @channel_group.command(name = "delete", description = "Delete a channel") # type: ignore
-    async def delete(self, ctx:ApplicationContext, ch:Option(str, "Channel name", required = True)):
+        ch = utils.get(ctx.guild.channels, id = ctx.channel.id)
 
-        await self.check_channel(ctx)# Calling the function manually
+        await modUtils.create_log_entry(ctx, reason, ch, func)
         
-        #   Fetch channels
-        ch = utils.get(ctx.guilchannels, name = ch)
-        chlog = utils.get(ctx.guilchannels, name = "auditlog")
-
-        try:   # If one of the channels does not exist raise exception
-            if not chlog: raise Exception(f"Channel \"{chlog}\" does not exists")
-            if not ch: raise Exception(f"Channel \"{chlog}\" does not exists")
-
-        except Exception as e: 
-            self.embetitle = "An Exception Occured"
-            self.embedescription = e
-            ctx.send(emed = self.embed)
-            return
-
-        self.embecolor = Colour.dark_red()
-        self.embetimestamp = datetime.datetime.now()
-        self.embetitle = f"{ctx.author.name} has deleted the channel\"**{ch}**\""
-
-        await chlog.send(embed=self.embed)
-
-        ctx.send_response
-        await ctx.channel.delete()
-        del ch, chlog # Clear memory
-        return 
+        await ctx.respond(f"Command Executed !", ephemeral = True)  
+        await ctx.channel.delete(reason = reason) #   Deleting the channel
 
     @channel_group.command(name = "modify", description = "Modify a channel") # type: ignore
-    async def modify(self, ctx:ApplicationContext, channeltype, name, age_restricted = False, archived = False, category = None, delay = 0, locked = False, newname = None, overwrites = None, reason = None, region = None, require_tags = False, thread_slowmode = 0, topic = None, quality = None): #   Modify a channel
+    async def modify(self, ctx:ApplicationContext): #   Modify a channel
 
-        ch = utils.get(ctx.guilchannels, name = name) #   Fetching the channel
+        raise NotImplementedError("This feature is not implemented yet")
+        """ch = utils.get(ctx.guild.channels, id = ctx.channel.id)
 
         try :#  Checking for exceptions
 
@@ -261,11 +133,6 @@ class ChannelModeration(commands.Cog):
             elif i["sync_permissions"] == False: i["sync_permissions"] == ch.permissions_synced
             elif i["require_tag"] == False: i["require_tag"] == ch.requires_tag
 
-        #   Clear some memory
-        del name, newname, topic
-        del reason, category
-
-
         for i in arg:
             match channeltype:  #   Matching the type of channel
                 case "forum": 
@@ -322,88 +189,30 @@ class ChannelModeration(commands.Cog):
                         ctx.respond(embed = self.embed)
 
                         return
-
-        return
-
-    @channel_group.command(name = "clear", description = "Clear a channel")   # type: ignore
-    async def clear(self, ctx:ApplicationContext, name:str, x:Option(int, "Number of messages to clear", default = 100, min_value = 1, max_value = 1000)):
-
         """
-            #   Initializing the channels
-            #   Checking wheter the values are correct or not
-            #   Print a message
-            #   Clearing a selected chat
-        """
-
-        
-        ch = utils.get(ctx.guilchannels, name = name)#   Fetch channel
-
-        try :#   if channel does not exits
-
-            if not ch : raise Exception(f"Channel \"{ch}\" does not exist in the server")
-            elif not chlog : raise Exception("Could not find the auditlog channel")
-
-            if str(x).isdigit():  
-                x = int(x)
-                if x < 0 or x > 1000: raise Exception("Choose an integer between 1-1000")
-            else : raise Exception("You can not use alphabetical or ghlupical letters")
-
-
-        except Exception as e: # Handle exceptions
-
-            self.embecolor = Colour.dark_red()
-            self.embetitle = f"An Exception Occured"
-            self.embedescription = f'The channel {ch}, were not cleared as requested due to\n{e}'
-            await ctx.send(embed = self.embed)
-
-            del ch, chlog, x, name  #   Clear some memory
-            return
-
-        #   Prepare & send the embed message
-        self.embecolor = Colour.dark_red()
-        self.embetimestamp = datetime.datetime.now()
-        self.embetitle = f"{ctx.author.name} has cleared {x} chat lines in {ch} channel."
-        await chlog.send(embed = self.embed)
-
-        await ctx.channel.purge(limit=x)#   Remove content from the channel
-        del ch, chlog, x, name  #   Clear some memory
-
-        return
     
-    @staticmethod
-    async def create_category(ctx:ApplicationContext, category:str, reason:str):
+    @channel_group.command(name = "clear", description = "Clear a channel")   # type: ignore
+    async def clear(self, ctx:ApplicationContext, n:Option(int, "Number of messages to clear", default = 100, required = False)):
         """
-            #   Create a category for the auditlog channel
+            Limitations:
+                - The commands works only in current channel.
+                - The number of messages to clear must be an integer between 1 and 1000.
+                - The command can only be used by users with the "manage_channels" permission.
         """
-        try:
-            if not category: raise Exception("Category name can not be empty")
-            elif len(category) > 100: raise Exception("Category name can not be longer than 100 characters")
 
-        except Exception as e:
-            embed = EmbedFactory.exception(e)
+        MIN = 1
+        MAX = 1000
 
-            ctx.respond(embed = embed)
-
-        else:
-            await ctx.guild.create_category(name = category, reason = reason)
-
-    @staticmethod
-    async def create_channel(ctx:ApplicationContext, name:str, channel_type:str, permissions:str,reason:str):
-        """
-            #   Create a channel
-        """
-        ch = utils.get(ctx.guild.channels,  name = name)
+        modUtils = ModerationUtils()
+        func = ModerationUtils.fetch_function_name(self.clear)
 
         try:
-            if ch: raise Exception(f"Channel \"{ch}\" Already exists in the server")
-            if len(name) > 100: raise Exception("Channel name can not be longer than 100 characters")
+            if n < MIN or n > MAX: raise ExceptionHandler(f"Choose an integer between {MIN}-{MAX}")
 
-        except Exception as e:
-            embed = EmbedFactory.exception(e)
-
-            ctx.respond(embed = embed)
+        except ExceptionHandler as e:
+            await modUtils.create_error_entry(ctx, e)
 
         else:
-            #   Create a channel
-            await ctx.guild.create_text_channel(name = name, reason = reason)
-
+            await ctx.channel.purge(limit=n)
+            await modUtils.create_log_entry(ctx, function_name=func, n=n)
+            await ctx.respond(f"Cleared {n} messages from the channel.", ephemeral=True)
