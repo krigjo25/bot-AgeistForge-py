@@ -63,6 +63,14 @@ class DuplicationError(ExceptionHandler):
         self.status_code = code
         self.message = message if message else "Resource already exists"
 
+class NotFoundError(ExceptionHandler):
+    """ NotFoundError raises when a resource is not found """
+
+    def __init__(self, message:Optional[str] = None, code:int = 404) -> None:
+        super().__init__(message, code)
+        self.status_code = code
+        self.message = message if message else "Resource not found"
+
 class NotImplementedError(ExceptionHandler):
     """ Raises when a feature is not implemented yet """
 
