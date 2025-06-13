@@ -43,11 +43,13 @@ class ChannelModeration(commands.Cog):
             Limitations:
                 - The commands works only in current channel.
         """
+
         #   Fetch the function name and split it to get the command name
         modUtils = ModerationUtils()
+        interaction = ctx.interaction
         func = modUtils.fetch_function_name(self.delete)
 
-        ch = utils.get(ctx.guild.channels, id = ctx.channel.id)
+        ch = utils.get(interaction.guild.channels, name = name)
 
         await modUtils.create_log_entry(ctx, reason, ch, func)
         
@@ -56,8 +58,6 @@ class ChannelModeration(commands.Cog):
 
     @channel_group.command(name = "modify", description = "Modify a channel") # type: ignore
     async def modify(self, ctx:ApplicationContext): #   Modify a channel
-
-        raise NotImplementedError("This feature is not implemented yet")
         """ch = utils.get(ctx.guild.channels, id = ctx.channel.id)
 
         try :#  Checking for exceptions
@@ -191,11 +191,12 @@ class ChannelModeration(commands.Cog):
                         return
         """
     
+        raise NotImplementedError("This feature is not implemented yet")
+        
     @channel_group.command(name = "clear", description = "Clear a channel")   # type: ignore
-    async def clear(self, ctx:ApplicationContext, n:Option(int, "Number of messages to clear", default = 100, required = False)):
+    async def clear(self, ctx:ApplicationContext, ch:str, n:Option(int, "Number of messages to clear", default = 100, required = False)):
         """
             Limitations:
-                - The commands works only in current channel.
                 - The number of messages to clear must be an integer between 1 and 1000.
                 - The command can only be used by users with the "manage_channels" permission.
         """
@@ -204,15 +205,18 @@ class ChannelModeration(commands.Cog):
         MAX = 1000
 
         modUtils = ModerationUtils()
+        interaction = ctx.interaction
         func = ModerationUtils.fetch_function_name(self.clear)
+        channel = utils.get(interaction.guild.channels, name = ch)
 
         try:
+            if not channel: raise ExceptionHandler(f"Channel '{ch}' does not exist.")
             if n < MIN or n > MAX: raise ExceptionHandler(f"Choose an integer between {MIN}-{MAX}")
 
         except ExceptionHandler as e:
             await modUtils.create_error_entry(ctx, e)
 
         else:
-            await ctx.channel.purge(limit=n)
+            await channel.purge(limit=n)
             await modUtils.create_log_entry(ctx, function_name=func, n=n)
             await ctx.respond(f"Cleared {n} messages from the channel.", ephemeral=True)
