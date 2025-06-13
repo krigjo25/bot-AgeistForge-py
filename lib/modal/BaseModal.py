@@ -4,11 +4,11 @@ import os
 from typing import Optional, Any, Dict
 
 from discord.ui import InputText, Modal
-from discord import utils, InputTextStyle, Interaction,  ChannelType, CategoryChannel
+from discord import utils, InputTextStyle, Interaction,  ChannelType, CategoryChannel, PermissionOverwrite
 
 from lib.utils.embed import EmbedFactory
 from lib.utils.moderation import ModerationUtils
-
+from lib.utils.permissions import PermissionUtils
 from lib.apis.github_api import GithubAPI
 from lib.utils.exceptions import ResourceNotFoundError, DuplicationError, ExceptionHandler
 
@@ -151,8 +151,7 @@ class ModalBase(Modal):
 
         topic = data.get('Channel Topic', "No Topic Provided")
 
-        ch = utils.get(interaction.guild.channels, name= data['Channel Name'])                                          #   type: ignore
-        perm = str(data.get('Permissions', interaction.guild.default_role.permissions)).split(',')                     
+        ch = utils.get(interaction.guild.channels, name= data['Channel Name'])                                          #   type: ignore                     
 
         category = next((i for i in interaction.guild.categories if str(i).lower() == data.get('Category', str(interaction.channel.category).lower())), None)  #   type: ignore
 
@@ -160,12 +159,21 @@ class ModalBase(Modal):
             if category:
                 if ch in category.channels and ch.type == str(data['Channel Type']).lower():                                  #   type: ignore
                     raise DuplicationError(f"A channel with the name '{data.get('Channel Name')}' and Same Channel Type '{data.get('Channel Type')}' already exists in {interaction.guild.name}.")
-                
+
         except DuplicationError as e: await mod_utils.create_error_entry(interaction, e)
-        else: await self.create_channel_modal(interaction, data, topic, perm, category) 
+        
+        else: 
+            await self.create_channel_modal(topic, data,interaction, category = category)  #   type: ignore
 
     @staticmethod
-    async def create_channel_modal( interaction:Interaction, data:dict[str, Any], topic:str, perm:str, category:Optional[CategoryChannel] = None, nsfw:bool = False) -> None:
+    async def create_channel_modal(
+        topic:str,
+        data:dict[str, Any],
+        interaction:Interaction,
+        nsfw:bool = False,
+        category:Optional[CategoryChannel] = None,
+        perm:Optional[PermissionOverwrite | Dict[str, Any]] = {}) -> None: 
+
         mod_utils = ModerationUtils()
         #perm =mod_utils.handle_permissions(perm, interaction.guild)  #   type: ignore
         try:
