@@ -13,7 +13,7 @@ from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import UtilsWatcher
 from lib.utils.exceptions import ResourceNotFoundError, ExceptionHandler, SelfReferenceError, AuthorizationError, TypeErrorHandler
 
-logger = UtilsWatcher(name="Moderation Utils")  #   type: ignore
+logger = UtilsWatcher(name="Moderation Utils")
 logger.file_handler()
 
 class ModerationUtils(object):
@@ -57,7 +57,7 @@ class ModerationUtils(object):
         if member.top_role >= interaction.user.top_role : 
             raise AuthorizationError("You cannot moderate this member, because they have a higher role than you")                                                         # type: ignore
     
-    async def create_log_entry(self, interaction:Interaction | ApplicationContext, reason:Optional[str] = None, member:Optional[Member] = None, function_name:Optional[str] = None, n: Optional[int] = 0):
+    async def create_log_entry(self, interaction:Interaction | ApplicationContext, reason:Optional[str] = None, member:Optional[Member] = None, function_name:Optional[str] = None, n: Optional[int] = 0, name:Optional[str] = "auditlog"):
         """
             Create a log entry in the auditlog channel
             This method is used to log actions taken by moderators on members.
@@ -77,20 +77,17 @@ class ModerationUtils(object):
                 None
 
             """
-        author = None
-        channel = utils.get(interaction.guild.channels, name='auditlog')                                                        #   type: ignore
-
 
         if isinstance(interaction, ApplicationContext):
-            author = interaction.author
-            ch = utils.get(interaction.guild.channels, id=interaction.channel_id)
+            interaction = interaction.interaction
+
+        ch = interaction.channel
+        author = interaction.user.name                                                                                          #   type: ignore
         
-        else:
-            author = interaction.user.name
-            ch = interaction.channel
+        channel = utils.get(interaction.guild.channels, name = name)                                                            #   type: ignore
 
         try:
-            if not channel: raise ResourceNotFoundError("Channel \"**auditlog**\" does not exists")
+            if not channel: raise ResourceNotFoundError("Channel \"**{name}**\" does not exists")
 
         except ResourceNotFoundError:
             permissions: Dict[str, PermissionOverwrite] = {}
@@ -98,8 +95,8 @@ class ModerationUtils(object):
             permissions['Admins'] = PermissionOverwrite(view_channel=True, send_messages=False)
             permissions['Moderators'] = PermissionOverwrite(view_channel=True, send_messages=False)
             permissions[interaction.guild.default_role] = PermissionOverwrite(view_channel=False, send_messages=True)           #   type: ignore
-            self.create_channel(name = "auditlog", interaction=interaction, channel_type = Channel.Text, perms = permissions)   #   type: ignore
-        
+            self.create_channel(name = name, interaction=interaction, channel_type = "text", perms = permissions, topic = "This is the auditlog channel for the server. All moderation actions will be logged here.", category = "Moderator")  #   type: ignore
+
         finally:
             dictionary:Dict[str, Any] = {}
 
@@ -112,10 +109,10 @@ class ModerationUtils(object):
                     case _: 
                         function_name = f"{function_name}d"
 
-                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch.name != "Unkown" else ch.name} channel."
+                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch.name != "Unknown" else ch.name} channel."#   type: ignore
             embed = self.base_embed.warning(dictionary)
 
-            await channel.send(embed=embed)     #   type: ignore
+            await channel.send(embed=embed)                                                                                         #   type: ignore
 
     @staticmethod
     async def create_error_entry(ctx:ApplicationContext | Interaction, e:ExceptionHandler) -> None:
