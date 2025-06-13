@@ -101,6 +101,7 @@ class EmbedFactory(object):
         """
         Sets the embed color to dark red for warning messages.
         """
+
         embed = cls._base_embed(dictionary, author = author, team = team, avatar = avatar)
         embed.colour = Colour.dark_red()
 
