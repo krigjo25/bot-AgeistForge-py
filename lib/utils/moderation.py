@@ -1,13 +1,13 @@
 
 #   Python Repositories
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 load_dotenv()
 
 #   Discord Repositories
 
-from discord import utils, Member, Interaction, PermissionOverwrite, ApplicationContext, Role
+from discord import utils, Member, Interaction, PermissionOverwrite, ApplicationContext, Role, SlashCommand
 
 from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import UtilsWatcher
@@ -57,8 +57,7 @@ class ModerationUtils(object):
         if member.top_role >= interaction.user.top_role : 
             raise AuthorizationError("You cannot moderate this member, because they have a higher role than you")                                                         # type: ignore
     
-
-    async def create_log_entry(self, interaction:Interaction, reason:str, member:Optional[Member] = None, action:Optional[str] = None, ):
+    async def create_log_entry(self, interaction:Interaction | ApplicationContext, reason:Optional[str] = None, member:Optional[Member] = None, function_name:Optional[str] = None, n: Optional[int] = 0):
         """
             Create a log entry in the auditlog channel
             This method is used to log actions taken by moderators on members.
@@ -78,26 +77,42 @@ class ModerationUtils(object):
                 None
 
             """
+        author = None
         channel = utils.get(interaction.guild.channels, name='auditlog')                                                        #   type: ignore
+
+
+        if isinstance(interaction, ApplicationContext):
+            author = interaction.author
+            ch = utils.get(interaction.guild.channels, id=interaction.channel_id)
+        
+        else:
+            author = interaction.user.name
+            ch = interaction.channel
 
         try:
             if not channel: raise ResourceNotFoundError("Channel \"**auditlog**\" does not exists")
 
         except ResourceNotFoundError:
             permissions: Dict[str, PermissionOverwrite] = {}
-            permissions['forum-moderators'] = PermissionOverwrite(view_channel=True)
-            permissions['admins'] = PermissionOverwrite(view_channel=True, send_messages=False)
-            permissions['moderators'] = PermissionOverwrite(view_channel=True, send_messages=False)
+            permissions['Forum-moderators'] = PermissionOverwrite(view_channel=True)
+            permissions['Admins'] = PermissionOverwrite(view_channel=True, send_messages=False)
+            permissions['Moderators'] = PermissionOverwrite(view_channel=True, send_messages=False)
             permissions[interaction.guild.default_role] = PermissionOverwrite(view_channel=False, send_messages=True)           #   type: ignore
             self.create_channel(name = "auditlog", interaction=interaction, channel_type = Channel.Text, perms = permissions)   #   type: ignore
         
-        else:
+        finally:
+            dictionary:Dict[str, Any] = {}
 
-            dictionary = {
-                "title": f"**{member.name}** has been {action} by {interaction.user.name}",
-                "message": f"*{reason}*.\n\n User has been notified by a direct message."
-            }
+            if member:
+                dictionary["title"] = f"**{member.name}** has been {function_name} by {author}"
+                dictionary["message"] = f"*{reason}*.\n\n User has been notified by a direct message."    
+            
+            if ch:
+                match(function_name):
+                    case _: 
+                        function_name = f"{function_name}d"
 
+                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch.name != "Unkown" else ch.name} channel."
             embed = self.base_embed.warning(dictionary)
 
             await channel.send(embed=embed)     #   type: ignore
@@ -222,11 +237,28 @@ class ModerationUtils(object):
         except TypeErrorHandler as e:
             raise e
         else:
-            await self.create_log_entry(interaction, action=f"create {channel_type.lower()} channel", reason=f"Channel '{name}' created by {interaction.user.name}", member=interaction.user)  # type: ignore
+            await self.create_log_entry(interaction, function_name=f"create {channel_type.lower()} channel", reason=f"Channel '{name}' created by {interaction.user.name}", member=interaction.user)  # type: ignore
         
-    async def create_category(self, name:str, interaction:Interaction, perms:Optional[Dict[str, PermissionOverwrite]] = None) -> None:
-        raise NotImplementedError("This method is not implemented yet, please use the Channel class to create a category")
-    
+    @staticmethod
+    async def create_category(ctx:ApplicationContext, category:str, reason:str) -> None:
+        """
+            #   Create a category for the auditlog channel
+        """
+        try:
+            if utils.get(ctx.guild.categories, name = category):
+                raise ExceptionHandler("Category already exists")
+            
+            if not category: raise ExceptionHandler("Category name can not be empty")
+            elif len(category) > 100: raise ExceptionHandler("Category name can not be longer than 100 characters")
+
+        except ExceptionHandler as e:
+            embed = EmbedFactory.exception(e)
+
+            ctx.respond(embed = embed)
+
+        else:
+            await ctx.guild.create_category(name = category, reason = reason)
+
     async def create_thread(self, name:str, interaction:Interaction, channel:Optional[str] = None, perms:Optional[Dict[str, PermissionOverwrite]] = None) -> None:
         """
             Create a thread in the server.
@@ -242,3 +274,18 @@ class ModerationUtils(object):
         raise NotImplementedError("This method is not implemented yet, please use the Channel class to create a thread")
     async def handle_permissions(self, perm:str)-> PermissionOverwrite:
         pass
+
+    @staticmethod
+    def fetch_function_name(name:SlashCommand) -> str:
+        """
+            Fetch the name of the function from the given string.
+            This method is used to extract the function name from a string.
+            Parameters:
+                - function_name: The string containing the function name.
+            Returns:
+                The extracted function name or None if not found.
+        """
+        func = getattr(name, "__name__", name)
+        func = str(func).split(" ")
+
+        return func[1]
