@@ -17,7 +17,6 @@ class Channel(ModalBase):
         super().__init__(*args, **kwargs)                           #   type: ignore
 
         self.HandleModal()
-        
 
     def HandleModal(self) -> None:
          match self.title.lower():                                  #   type: ignore
