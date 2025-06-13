@@ -119,10 +119,10 @@ class ModalDictionary(object):
         topic['label'] = "Channel Topic"
         topic['description'] = "(e.g. 'General discussion about the server') *Optional*"
 
-        perm: Dict[str, Union[str, Any]] = {}
-        perm['required'] = False
-        perm['label'] = "Channel Permissions"
-        perm['style'] = d.InputTextStyle.long
-        perm['description'] = "Select the configurations for the channel (/help text configuration for more info) *Separated by **','**"
+        #perm: Dict[str, Union[str, Any]] = {}
+        #perm['required'] = False
+        #perm['label'] = "Channel Permissions"
+        #perm['style'] = d.InputTextStyle.long
+        #perm['description'] = "Channel Configurtations (/help text configuration for more info) *Separated by **','**"
 
-        return (name, channeltype, category, topic, perm)
+        return (name, channeltype, category, topic)
