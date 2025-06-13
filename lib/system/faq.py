@@ -1,4 +1,5 @@
 #   Frequently Asked Questions Module
+from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -25,13 +26,12 @@ class FrequentlyAskedQuestions(commands.Cog):
     async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False) = None): #   type: ignore
     
         #embed = EmbedFactory()
-        match str(arg).lower():
+        match str(arg).lower():                         #   type: ignore
             case "member module": embed = self.member_module()
             case "community module": embed = self.community_module()
             case "channel module": embed = self.forum_moderation_module()
-            case "text config": embed = self.text_configurations() #   type: ignore
             #case "role module": embed = self.role_module()
-            case _: embed = self.main_response(ctx) #   type: ignore
+            case _: embed = self.main_response(ctx)     #   type: ignore
 
         await ctx.respond(embed = embed) #   type: ignore
 
@@ -146,19 +146,5 @@ class FrequentlyAskedQuestions(commands.Cog):
         fields[f'{prefix} set_permissions'] = "- Sets the permissions of a role in the server"
         
 
-        embed = EmbedFactory.create_embed(dictionary, fields=fields)
-        return embed
-    
-    @staticmethod
-    def text_configurations() -> Embed:
-
-        dictionary = dict[str, str]()
-        dictionary['title'] = 'Text Configuration Module'
-        dictionary['description'] = "This module provides configurations for server channels."
-
-        fields = dict[str, str]()
-        fields['Slowmode:int'] = " Sets a slowmode for a channel in seconds (e.g. Slowmode:5)"
-        fields['Age restriction(NSFW):boolean'] = " Sets an age restriction for a channel (e.g. nsfw:True)" 
-        
         embed = EmbedFactory.create_embed(dictionary, fields=fields)
         return embed
