@@ -113,9 +113,7 @@ class ModerationUtils(object):
                 dictionary["message"] = f"*{reason}*.\n\n User has been notified by a direct message."    
             
             if channel:
-                match(function_name):
-                    case _: 
-                        function_name = f"{function_name}d"
+                function_name = self.handle_string(function_name)
 
                 dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch  else 'Unknown '} channel."#   type: ignore
             embed = self.base_embed.warning(dictionary)
@@ -278,6 +276,7 @@ class ModerationUtils(object):
                 None
         """
         raise NotImplementedError("This method is not implemented yet, please use the Channel class to create a thread")
+    
     async def handle_permissions(self, perm:str)-> PermissionOverwrite:
         pass
 
@@ -295,3 +294,21 @@ class ModerationUtils(object):
         func = str(func).split(" ")
 
         return func[1]
+    
+    @staticmethod
+    def handle_string(string:str) -> str:
+        """
+            Handle the string by removing the first character if it is a space.
+            This method is used to clean up the string before using it.
+            Parameters:
+                - string: The string to be handled.
+            Returns:
+                The cleaned-up string.
+        """
+        match(string):
+            case "clear":
+                string = f"{string}ed"
+            case _: 
+                string = f"{string}d"
+
+        return string

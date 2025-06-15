@@ -1,13 +1,9 @@
-
-#   Python Repositories
-import datetime
-
+#   Channel Moderation Module
 #   Discord Repositories
 from discord.ext import  commands
-from discord import utils, SlashCommandGroup, ApplicationContext, Option, Permissions, Forbidden, HTTPException, InvalidArgument
+from discord import utils, SlashCommandGroup, ApplicationContext, Option, Permissions
 
 from lib.modal.channel import Channel
-from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import UtilsWatcher
 from lib.utils.moderation import ModerationUtils
 from lib.utils.exceptions import ExceptionHandler, AuthorizationError, ResourceNotFoundError
@@ -22,15 +18,11 @@ class ChannelModeration(commands.Cog):
         The commands are grouped under the "channel_group" command group.
 
     """
-
-    def __init__(self, bot:commands.Bot):
-
-        self.bot = bot
     
     #   Slash command group
     channel_group = SlashCommandGroup(name = "channel", description = "Create something", default_member_permissions = Permissions(manage_channels = True))
 
-    @channel_group.command(name = "create", description = "Create a channel") # type: ignore
+    @channel_group.command(name = "create", description = "Create a channel")                                   # type: ignore
     async def create(self, ctx:ApplicationContext):
         
         modal = Channel(title = "Custom-Channel")
@@ -58,7 +50,7 @@ class ChannelModeration(commands.Cog):
         except ExceptionHandler as e:
             await modUtils.create_error_entry(ctx, e)
         
-        else: 
+        else:
             await channel.delete(reason = reason)                                                               #   type: ignore
             await ctx.respond(f"Command Executed!", ephemeral = True)   
         
@@ -206,7 +198,7 @@ class ChannelModeration(commands.Cog):
     
         raise NotImplementedError("This feature is not implemented yet")
         
-    @channel_group.command(name = "clear", description = "Clear a channel")   # type: ignore
+    @channel_group.command(name = "clear", description = "Clear a channel")                         # type: ignore
     async def clear(self, ctx:ApplicationContext, 
                     n:Option(int, "Number of messages to clear", default = 100, required = False),  # type: ignore
                     name:Option(str, "Channel name", required = False)):                            # type: ignore
@@ -223,7 +215,7 @@ class ChannelModeration(commands.Cog):
         interaction = ctx.interaction
         func = ModerationUtils.fetch_function_name(self.clear)
         channel = utils.get(interaction.guild.channels, name = name) if name else ctx.channel       # type: ignore
-
+        
         try:
             if n < MIN or n > MAX: raise ExceptionHandler(f"Choose an integer between {MIN}-{MAX}")
 
@@ -232,5 +224,8 @@ class ChannelModeration(commands.Cog):
 
         else:
             await channel.purge(limit=n)                                                            # type: ignore
-            await modUtils.create_log_entry(ctx, function_name=func, n=n)                           # type: ignore
+            
             await ctx.respond(f"Cleared {n} messages from the {channel.mention}.", ephemeral=True)  # type: ignore
+        
+        finally:
+            await modUtils.create_log_entry(ctx, function_name=func, ch = channel.name, n=n)        # type: ignore
