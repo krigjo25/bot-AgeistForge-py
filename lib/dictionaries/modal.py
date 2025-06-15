@@ -10,78 +10,119 @@ class ModalDictionary(object):
     """
     def __init__(self): pass
 
-    def announcement(self):
+    @staticmethod
+    def announcement() -> Tuple[Dict[str, Union[str, bool]], ...]:
 
-        title = {
+        title: Dict[str, Union[str, bool]] = {}
+        title['label'] = "Title"
+        title['required'] = True
+        title['description'] = "Title of the announcement (e.g. 'Server Maintenance')"
 
-            "label": "Title",
-            "required":True}
-
-
-        url = {
-            "label": "URL",
-            "description": "Optional URL for the announcement"}
-
-        message = {
-            "required": True,
-            "label": "Message",
-            "style": d.InputTextStyle.long}
+        url: Dict[str, Union[str, bool]] = {}
+        url['label'] = "URL"
+        url['description'] = "Optional URL for the announcement (e.g. 'https://example.com/announcement')"
+        
+        message: Dict[str, Union[str, Any]] = {}
+        message['required'] = True
+        message['label'] = "Message"
+        message['style'] = d.InputTextStyle.long
+        message['description'] = "Announcement content (e.g. 'The server will be down for maintenance from 12:00 AM to 2:00 AM')"
 
         return (title, url, message)
 
-    def server_support(self): pass
-    def discord_support(self): 
-        title = {
+    @staticmethod
+    def discord_support() -> Tuple[Dict[str, Union[str, Any]], ...]: 
+        title : Dict[str, Union[str, Any]] = {}
+        title['label'] = "Title"
+        title['required'] = True
+        title['description'] = "(e.g. 'Unable to access general channel')"
 
-            "label": "title",
-            "description": "e.g. 'Unable to access general channel'",
-            "required":True}
+        message: Dict[str, Union[str, Any]] = {}
+        message['required'] = True
+        message['label'] = "Message"
+        message['style'] = d.InputTextStyle.long
+        message['description'] = "Describe the issue you are facing (e.g. 'I am unable to access the general channel due to a permission error')"
 
+        return (title, message)
 
-        image = {
-            "label": "image/video",
-            "description": "Image or a video link of the issue",
-            "required": False,
-            }
+    @staticmethod
+    def server_support() -> Tuple[Dict[str, Union[str, Any]], ...]: 
+        title : Dict[str, Union[str, Any]] = {}
+        title['label'] = "Title"
+        title['required'] = True
+        title['description'] = "(e.g. 'Unable to access general channel')"
 
-        message = {
-            "required": True,
-            "label": "Message",
-            "description": " e.g. 'I am unable to access the general channel due to a permission error'",
-            "style": d.InputTextStyle.long}
+        image: Dict[str, Union[str, bool]] = {}
+        image['label'] = "Image/Video"
+        image['description'] = "Image or a video link of the issue (e.g https://example.com/image.png)"
+
+        message: Dict[str, Union[str, Any]] = {}
+        message['required'] = True
+        message['label'] = "Message"
+        message['style'] = d.InputTextStyle.long
+        message['description'] = "Describe the issue you are facing (e.g. 'I am unable to access the general channel due to a permission error')"
 
         return (title, image, message)
 
-    def bug_report(self):
-        name = {
-            "required":False,
-            "label": "app",
-            "description": "Name of the application or game (e.g. 'MyGame')",}
+    @staticmethod
+    def bug_report() -> Tuple[Dict[str, Union[str, Any]], ...]:
 
-        title = {
-            "label": "title",
-            "required":False,
-            "description": "e.g. 'Game crashes on startup'"}
+        name : Dict[str, Union[str, str | bool]] = {}
+        name['required'] = True
+        name['label'] = "Application/Game Name"
+        name['description'] = "Name of the application or game (e.g. 'MyGame')"
 
+        title: Dict[str, Union[str, str | bool]] = {}
+        title['required'] = True
+        title['label'] = "Issue Title"
+        title['description'] = "Brief description of the issue (e.g. 'Game crashes on startup')"
 
-        image = {
-            "required": False,
-            "label": "image/video",
-            "description": "Image or a video link of the issue (e.g https://example.com/image.png)",
-            }
+        image: Dict[str, Union[str, bool]] = {}
+        image['required'] = True
+        image['label'] = "Image/Video"
+        image['description'] = "Image or a video link of the issue (e.g https://example.com/image.png)"
         
-        
-        message = {
-            "required": False,
-            "label": "Reproduction-Steps",
-            "description": " e.g. '1. Open the game server\n2. Utilize the command /help\n3. Error message appears'",
-            "style": d.InputTextStyle.long
-            }
-        
-        details = {
-            "required": bool(False),
-            "label": "Additional-Details",
-            "description": " e.g. 'This issue occurs only on mobile devices'",
-            "style": d.InputTextStyle.long}
+        message: Dict[str, Union[str, Any]] = {}
+        message['required'] = True
+        message['label'] = "Reproduction Steps"
+        message['style'] = d.InputTextStyle.long
+        message['description'] = "Steps to reproduce the issue (e.g. '1. Open the game\n2. Click on Start Game')"
+
+        details: Dict[str, Union[str, Any]] = {}
+        details['required'] = True
+        details['label'] = "Additional Details"
+        details['style'] = d.InputTextStyle.long
+        details['description'] = "e.g. 'This issue occurs only on mobile devices'"
 
         return (name, title, image, message, details)
+
+    @staticmethod
+    def create_channel_modal() -> Tuple[Dict[str, Union[str, Any]], ...]:
+        
+        name: Dict[str, Union[str, bool]] = {}
+        name['required'] = True
+        name['label'] = "Channel Name"
+        name['description'] = "(e.g. 'general' 'announcements', 'support') *Required*"
+
+        channeltype: Dict[str, Union[str, bool]] = {}
+        channeltype['required'] = True
+        channeltype['label'] = "Channel Type"
+        channeltype['description'] = "type of channel (e.g. Text / Voice / Stage / forum / news) *Required*"   
+
+        category: Dict[str, Union[str, bool]] = {}
+        category['required'] = False
+        category['label'] = "Category"
+        category['description'] = "Select the category for the channel (optional)"
+
+        topic: Dict[str, Union[str, bool]] = {}
+        topic['required'] = False
+        topic['label'] = "Channel Topic"
+        topic['description'] = "(e.g. 'General discussion about the server') *Optional*"
+
+        #perm: Dict[str, Union[str, Any]] = {}
+        #perm['required'] = False
+        #perm['label'] = "Channel Permissions"
+        #perm['style'] = d.InputTextStyle.long
+        #perm['description'] = "Channel Configurtations (/help text configuration for more info) *Separated by **','**"
+
+        return (name, channeltype, category, topic)

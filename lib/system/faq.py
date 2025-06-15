@@ -1,4 +1,5 @@
 #   Frequently Asked Questions Module
+from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -8,8 +9,8 @@ from discord.ext import commands
 from discord.commands import SlashCommandGroup, ApplicationContext, Option
 
 from lib.utils.embed import EmbedFactory
-from lib.utils.logger_config import CommandWatcher
-logger = CommandWatcher(name="FAQ") 
+from lib.utils.logger_config import UtilsWatcher
+logger = UtilsWatcher(name="FAQ") 
 logger.file_handler()
 
 class FrequentlyAskedQuestions(commands.Cog):
@@ -25,11 +26,12 @@ class FrequentlyAskedQuestions(commands.Cog):
     async def help_menu(self, ctx:ApplicationContext, arg:Option(str, "Optional: Enter a module's Name", required=False) = None): #   type: ignore
     
         #embed = EmbedFactory()
-        match str(arg).lower():
+        match str(arg).lower():                         #   type: ignore
             case "member module": embed = self.member_module()
             case "community module": embed = self.community_module()
             case "channel module": embed = self.forum_moderation_module()
-            case _: embed = self.main_response(ctx) #   type: ignore
+            #case "role module": embed = self.role_module()
+            case _: embed = self.main_response(ctx)     #   type: ignore
 
         await ctx.respond(embed = embed) #   type: ignore
 
@@ -48,6 +50,7 @@ class FrequentlyAskedQuestions(commands.Cog):
         
         if ctx.author.guild_permissions.manage_channels:    #   type: ignore
             fields['Channel Module'] = "List of Available Channel commands."
+            fields['Text Config'] = "List of Available text configurations."
         
         if ctx.author.guild_permissions.manage_roles:       #   type: ignore
             fields['Role Module'] = "List of Available Role commands."
@@ -98,6 +101,7 @@ class FrequentlyAskedQuestions(commands.Cog):
         fields[f'{prefix} clear'] = "- Clears the messages in the given channel"
         fields[f'{prefix} SetSlowmode'] = "- Sets the slowmode of the given channel"
         fields[f'{prefix} Create'] = "- Creates a new channel with default settings (hidden)"
+        fields[f'/help permission'] = "- Provides information how to set permissions for a channel"
 
         embed = embed.info(dictionary, fields=fields)
         return embed

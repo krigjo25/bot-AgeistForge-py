@@ -18,8 +18,8 @@ from lib.utils.moderation import ModerationUtils
 from lib.selections.selections import SupportSelections
 from lib.utils.exceptions import SelfReferenceError, ResourceNotFoundError, ExceptionHandler, InvalidDurationError, AuthorizationError
 
-from lib.utils.logger_config import CommandWatcher
-logger = CommandWatcher(name="Member Moderation") #   type: ignore
+from lib.utils.logger_config import UtilsWatcher
+logger = UtilsWatcher(name="Member Moderation") #   type: ignore
 logger.file_handler()
 
 class MemberModeration(commands.Cog):

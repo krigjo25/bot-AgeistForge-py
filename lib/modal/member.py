@@ -27,7 +27,7 @@ class MemberModal(ModalBase):
             case "server-support": self.member_support()
 
     def member_support(self):
-        modal = ModalDictionary().discord_support()                     #   type: ignore
+        modal = ModalDictionary().server_support()                     #   type: ignore
 
         for i in modal:                                                 #   type: ignore
             self.create_input(

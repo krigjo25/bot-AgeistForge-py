@@ -63,6 +63,14 @@ class DuplicationError(ExceptionHandler):
         self.status_code = code
         self.message = message if message else "Resource already exists"
 
+class NotFoundError(ExceptionHandler):
+    """ NotFoundError raises when a resource is not found """
+
+    def __init__(self, message:Optional[str] = None, code:int = 404) -> None:
+        super().__init__(message, code)
+        self.status_code = code
+        self.message = message if message else "Resource not found"
+
 class NotImplementedError(ExceptionHandler):
     """ Raises when a feature is not implemented yet """
 
@@ -70,3 +78,19 @@ class NotImplementedError(ExceptionHandler):
         super().__init__(message, code)
         self.status_code = code
         self.message = message if message else "This feature is not implemented yet"
+
+class TypeErrorHandler(TypeError):
+    """ Raises when a type is not valid """
+
+    def __init__(self, message:Optional[str] = None, code:int = 400) -> None:
+        super().__init__(message, code)
+        self.status_code = code
+        self.message = message if message else "Invalid type specified"
+
+class ValueErrorHandler(ValueError):
+    """ Raises when a value is not valid """
+
+    def __init__(self, message:Optional[str] = None, code:int = 400) -> None:
+        super().__init__(message, code)
+        self.status_code = code
+        self.message = message if message else "Invalid value specified"

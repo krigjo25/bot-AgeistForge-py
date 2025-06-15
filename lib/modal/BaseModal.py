@@ -1,24 +1,30 @@
+#   The modal system works
 
 import os
+from typing import Optional, Any, Dict
 
 from discord.ui import InputText, Modal
-from discord import utils, InputTextStyle, Interaction,  ChannelType
+from discord import utils, InputTextStyle, Interaction,  ChannelType, CategoryChannel, PermissionOverwrite
 
-from typing import Optional, Any
-
+from lib.utils.embed import EmbedFactory
+from lib.utils.moderation import ModerationUtils
+from lib.utils.permissions import PermissionUtils
 from lib.apis.github_api import GithubAPI
-from lib.utils.embed import EmbedFactory as EF
-from lib.utils.exceptions import ResourceNotFoundError,DuplicationError
+from lib.utils.exceptions import ResourceNotFoundError, DuplicationError, ExceptionHandler
 
+from lib.utils.logger_config import ModalWatcher
+logger = ModalWatcher(name="Modal")
+logger.file_handler()
 
 class ModalBase(Modal):
     """
         Base class for modals to inherit from.
         Contains common functionality for all modals.
     """
+
     def __init__(self, *args, **kwargs, ):              #   type: ignore
         super().__init__(*args, **kwargs)               #   type: ignore
-        self.base_embed = EF()                          #   type: ignore
+        self.base_embed = EmbedFactory
 
     def create_input(self, label: str, required: bool, style:InputTextStyle = InputTextStyle.short, placeholder: Optional[str] = None):
         """
@@ -42,22 +48,28 @@ class ModalBase(Modal):
         data = {}
         for  i in self.children:
             data[i.label] = i.value.lower() if isinstance(i.value, str) else i.value
-        match self.title.lower():                                                           #   type: ignore
-            case "bug-report":  await self.report_issue(interaction, data)                    #   type: ignore
-            case "member-report":  await self.forum_modal(interaction, data)                #   type: ignore
-            case "server-support":  await self.forum_modal(interaction, data)               #   type: ignore
-            case "discord-support":  await self.forum_modal(interaction, data)              #   type: ignore
-            case "announcement":    await self.post_announcement_modal(interaction, data)   #   type: ignore
+
+        await self.handle_modal(interaction, data)                   #   type: ignore
 
         await interaction.response.send_message("Modal command executed", ephemeral=True)   #   type: ignore
+
+    async def handle_modal(self, interaction:Interaction, data:dict[str, Any]) -> None:
+        match self.title.lower():
+            case "bug-report":  await self.report_issue(interaction, data)                    
+            case "member-report":  await self.forum_modal(interaction, data)
+            case "server-support":  await self.forum_modal(interaction, data)
+            case "discord-support":  await self.forum_modal(interaction, data)
+            case "announcement":    await self.post_announcement_modal(interaction, data)
+            case "custom-channel": await self.channel_modal(interaction, data)
+            case _ : 
+                logger.error(f"Modal title : '{self.title}' not recognized.\n")
+                raise ValueError(f"Modal title : '{self.title}' not recognized.\n")
 
     async def forum_modal(self, interaction:Interaction, data:dict[Any, Any]) -> None:
         """
         Placeholder for forum modal handling.
         """
-        #   TODO : Implement dynamic role mention based on the SELECTION
-        
-        variable = self.title.lower().split('-') if self.title else None
+        variable = self.title.lower().split('-') if isinstance(self.title, list) else None
 
         ch = utils.get(interaction.guild.channels, name= variable[1], type = ChannelType.forum) #   type: ignore
         threads = utils.get(ch.threads, name = data.get("title")) if ch else None               #   type: ignore
@@ -75,13 +87,13 @@ class ModalBase(Modal):
             await interaction.response.send_message(embed=e, ephemeral=True)
         
         else:
-            responsebility = f"{interaction.user.display_name} has requested assistance from @RoleMention."                                     #   type: ignore
-            form = f""" **Name** :\n{interaction.user.display_name}\n **What is the issue? :**\n{data.get("Message")}\n\n{responsebility}"""    #   type: ignore
+            responsebility = f"{interaction.user.name} has requested assistance from @RoleMention."                                     #   type: ignore
+            form = f""" **Name** :\n{interaction.user.name}\n **What is the issue? :**\n{data.get("Message")}\n\n{responsebility}"""    #   type: ignore
 
             await ch.create_thread( name = data.get("title"),                                       #   type: ignore
                                     content = form,                                                 #   type: ignore
                                     auto_archive_duration = 60*24,
-                                applied_tags= [utils.get(ch.available_tags, name =variable[0])])    #   type: ignore
+                                    applied_tags= [utils.get(ch.available_tags, name =variable[0])])    #   type: ignore
 
     async def post_announcement_modal(self, interaction:Interaction, data:dict[str, str]) -> None:
         ch = utils.get(interaction.guild.channels, type = ChannelType.news )                #   type: ignore
@@ -133,3 +145,59 @@ class ModalBase(Modal):
         
         except (ResourceNotFoundError, Exception) as e:
             print(f"Error: {e}")
+
+    async def channel_modal(self, interaction:Interaction, data:dict[str, Any]) -> None:
+        mod_utils = ModerationUtils()
+
+        topic = data.get('Channel Topic', "No Topic Provided")
+
+        ch = utils.get(interaction.guild.channels, name= data['Channel Name'])                                          #   type: ignore                     
+
+        category = next((i for i in interaction.guild.categories if str(i).lower() == data.get('Category', str(interaction.channel.category).lower())), None)  #   type: ignore
+
+        try:
+            if category:
+                if ch in category.channels and ch.type == str(data['Channel Type']).lower():                                  #   type: ignore
+                    raise DuplicationError(f"A channel with the name '{data.get('Channel Name')}' and Same Channel Type '{data.get('Channel Type')}' already exists in {interaction.guild.name}.")
+
+        except DuplicationError as e: await mod_utils.create_error_entry(interaction, e)
+        
+        else: 
+            await self.create_channel_modal(topic, data,interaction, category = category)  #   type: ignore
+
+    @staticmethod
+    async def create_channel_modal(
+        topic:str,
+        data:dict[str, Any],
+        interaction:Interaction,
+        nsfw:bool = False,
+        category:Optional[CategoryChannel] = None,
+        perm:Optional[PermissionOverwrite | Dict[str, Any]] = {}) -> None: 
+
+        mod_utils = ModerationUtils()
+        #perm =mod_utils.handle_permissions(perm, interaction.guild)  #   type: ignore
+        try:
+            print(category)
+
+            await mod_utils.create_channel(name = data['Channel Name'], 
+                                        interaction = interaction, 
+                                        channel_type = str(data['Channel Type']).lower(), 
+                                        category = category,  #   type: ignore
+                                        topic = topic,
+                                        perm = {},
+                                        nsfw= nsfw,)
+        except ExceptionHandler as e:
+            print(e)
+            await mod_utils.create_error_entry(interaction, e)
+            
+        #   TODO: Checking if the channel already exists
+        #   TODO: Add a check for the channel type
+        #   TODO: Add a check for the category name if provided
+        #   TODO: Add a check for the permissions if provided
+        #   TODO: Add a check for the Channel topic if provided
+        #   TODO: Catch any exceptions that may occur
+
+        #   TODO: If everything goes well, create the channel and send a message to the user
+
+        
+        #   TODO: Create a channel with the provided data

@@ -1,49 +1,51 @@
 #   Discord Repositories
+
+from typing import Optional
 import discord as d
-from discord.colour import Colour
+
+from discord.ext import commands
 
 
-from discord.ext.commands import Cog
+class PermissionUtils(commands.Cog):
+
+    """Utility class for handling permissions in Discord channels."""
+
+    def handle_permissions(self,case: Optional[str] = "default", dict:Optional[dict[str, str]] = {}) -> None:
+        """
+        Handles the default permissions for channels.
+        """
+        match(case):
+            case "member": self.Member(dict)
+            case _ : self.default()
+
+    @staticmethod
+    def Member(dict: dict[str, str]) -> d.PermissionOverwrite:
+
+        perm = d.PermissionOverwrite()
+        
+        for key, value in dict.items():
+            if hasattr(perm, key):
+                setattr(perm, key, value)
 
 
-class ChannelPermissions(Cog):
-
-    """
-        Copyright (C) 2023  Kristoffer Gjøsund
-
-        Permissions of the Discord Channels
-
-        >   Creation Date   : 18.02-23
-        >   Last update     :
-
-        This program is free software: you can redistribute it and/or modify
-        it under the terms of the GNU General Public License as published by
-        the Free Software Foundation, either version 3 of the License, or
-        (at your option) any later version.
-
-        This program is distributed in the hope that it will be useful,
-        but WITHOUT ANY WARRANTY; without even the implied warranty of
-        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-        GNU General Public License for more details.
-    """
-    def __init__(self):
-
-        self.embed = d.Embed(color=Colour.dark_purple())
-
-        return
-
-    async def SelectPermissions(self, ctx:d.ApplicationContext, arg, role = None):
-
-        if role == None: role = ctx.guild.default_role
-        match str(arg).lower().replace(" ",""):
-            case "member": return self.Member()
-            case "none": return self.hidden(role)
-
-    def hidden(self, role): return {role :d.PermissionOverwrite(view_channel = False,)}
-
-    def Member(self):
+        return perm
+    
+    @staticmethod
+    def default() -> d.PermissionOverwrite:
 
         perm = d.PermissionOverwrite(
+            # Text-Channels
+            view_channel=False,
+            send_messages=False,
+            add_reactions=False,
+            external_emojis=False,
+            read_message_history=False,
+            mention_everyone=False,
+            )
+
+        return perm
+    
+        """perm = d.PermissionOverwrite(
                                                 # Text-Channels
                                                 send_messages=True,
                                                 add_reactions = True,
@@ -56,8 +58,7 @@ class ChannelPermissions(Cog):
                                                 read_message_history=True,
                                                 create_instant_invite = False)
 
-        return perm
-"""perm = d.PermissionOverwrite(#   Voice
+        return perm perm = d.PermissionOverwrite(#   Voice
                                                 speak = True,
                                                 connect = True,
                                                 request_to_speak = True,

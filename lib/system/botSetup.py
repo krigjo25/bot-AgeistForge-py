@@ -7,10 +7,11 @@ from lib.system.discordBot import DiscordBot
 from lib.utils.error_handler import ErrorHandler
 from lib.system.faq import FrequentlyAskedQuestions
 
-from lib.moderation.administrator import Administrator
-from lib.moderation.member_moderation import MemberModeration
-from lib.moderation.channel_moderation import ChannelModeration, RoleModeration
-
+#   Moderation libraries
+from lib.modules.moderation.administrator import Administrator
+from lib.modules.moderation.role_moderation import RoleModeration
+from lib.modules.moderation.member_moderation import MemberModeration
+from lib.modules.moderation.channel_moderation import ChannelModeration
 
 class DiscordSetup():
 
@@ -30,10 +31,10 @@ class DiscordSetup():
         self.intents.presences = True                       #   Allows the bot to track member activity (presence_update, member.activities, status, raw status)
         
         #   Messaging and Communication
+        self.intents.typing = True                          #   Allows the bot to show typing indicator inside both Guild & DM (message.content, embeds, attatchments, message components)
         self.intents.messages = True                        #   Allows the bot to send messages to both Guild & DM (message_edit, message_delete, cached_messages, get_message, reaction_add, reaction_remove, )
         self.intents.message_content =True                  #   Allows the bot to send embeded message (content, embeds, attachments, components)
-        self.intents.typing = True                          #   Allows the bot to show typing indicator inside both Guild & DM (message.content, embeds, attatchments, message components)
-
+        
         #   Direct Message and Guild Specific
         #self.intents.dm_typing = True                       #   Allows the bot to indicate a typing indicator in Direct Message (message.content, embeds, attatchments, message components)
         #self.intents.dm_messages = True                     #  Allows the bot to send messages in direct messages only (message_edit, message_delete, cached_messages, get_message, reaction_add, reaction_remove, )
@@ -59,7 +60,8 @@ class DiscordSetup():
         self.bot.add_cog(FrequentlyAskedQuestions(self.bot))
 
     def moderation_setup(self):
-        #self.bot.add_cog(Administrator(self.bot))
+        #
+        self.bot.add_cog(Administrator(self.bot))
         #self.bot.add_cog(RoleModeration(self.bot))
         self.bot.add_cog(MemberModeration(self.bot))
         self.bot.add_cog(ChannelModeration(self.bot))
