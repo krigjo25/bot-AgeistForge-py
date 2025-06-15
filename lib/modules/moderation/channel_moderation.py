@@ -10,7 +10,7 @@ from lib.modal.channel import Channel
 from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import UtilsWatcher
 from lib.utils.moderation import ModerationUtils
-from lib.utils.exceptions import ExceptionHandler
+from lib.utils.exceptions import ExceptionHandler, AuthorizationError, ResourceNotFoundError
 logger = UtilsWatcher(name="Channel Moderation")
 logger.file_handler()
 
@@ -36,38 +36,51 @@ class ChannelModeration(commands.Cog):
         modal = Channel(title = "Custom-Channel")
         await ctx.send_modal(modal)
 
-    @channel_group.command(name = "delete", description = "Deletes the channel which the user interacts with") # type: ignore
-    async def delete(self, ctx:ApplicationContext, reason:Option(str, "Reason for deletion", required = True)):
+    @channel_group.command(name = "delete", description = "Deletes the channel which the user interacts with")  # type: ignore
+    async def delete(self,  
+                     ctx:ApplicationContext, 
+                     name: Option(str, "Channel name", required = True),                                        #   type: ignore
+                     reason:Option(str, "Reason for deletion", required = True)):                               #   type: ignore
 
-        """
-            Limitations:
-                - The commands works only in current channel.
-        """
-
-        #   Fetch the function name and split it to get the command name
         modUtils = ModerationUtils()
         interaction = ctx.interaction
         func = modUtils.fetch_function_name(self.delete)
 
-        ch = utils.get(interaction.guild.channels, name = name)
+        channel = utils.get(interaction.guild.channels, name = name)                                            #   type: ignore
+        await modUtils.create_log_entry(ctx, reason, ch = channel.name, function_name = func)                   #   type: ignore
 
-        await modUtils.create_log_entry(ctx, reason, ch, func)
+        try:
+            if not channel: raise ResourceNotFoundError(f"Channel '{name}' does not exist.")
+
+            if not channel.permissions_for(ctx.author).manage_channels:                                         #   type: ignore
+                raise AuthorizationError(f"{ctx.author} Does not have permission to delete this channel.")
+
+        except ExceptionHandler as e:
+            await modUtils.create_error_entry(ctx, e)
         
-        await ctx.respond(f"Command Executed !", ephemeral = True)  
-        await ctx.channel.delete(reason = reason) #   Deleting the channel
-
+        else: 
+            await channel.delete(reason = reason)                                                               #   type: ignore
+            await ctx.respond(f"Command Executed!", ephemeral = True)   
+        
     @channel_group.command(name = "modify", description = "Modify a channel") # type: ignore
-    async def modify(self, ctx:ApplicationContext): #   Modify a channel
-        """ch = utils.get(ctx.guild.channels, id = ctx.channel.id)
+    async def modify(self, ctx:ApplicationContext, channel_name:Option(str, "Channel name", required = True)):  # type: ignore
+        
+        channel = utils.get(ctx.guild.channels, name=channel_name)
+        modUtils = ModerationUtils()
 
-        try :#  Checking for exceptions
+        try:
+            if not channel: raise ResourceNotFoundError(f"Channel '{channel_name}' does not exist.")
 
-            if str(channeltype).isdigit() : raise Exception("channeltype argument, can not be integers") #   Checking if the channelType contains integers
-            elif str(channeltype) not in ["forum","text", "voice", "category", "stage" ]: raise Exception(" channeltype argument, has only four types, (forum / text / voice or category)")
+            if not channel.permissions_for(ctx.author).manage_channels:
+                raise AuthorizationError(f"{ctx.author} Does not have permission to modify this channel.")
 
-            #   Boolean values
-            if str(archived).isalpha():
-                if str(archived) == "True": archived == True
+        except ExceptionHandler as e:
+            await modUtils.create_error_entry(ctx, e)
+
+        else:
+            await ctx.respond(f"Command Executed!", ephemeral = True)
+            await ctx.send_modal(Channel(title = f"Modify {channel_name}", channel = channel))  # type: ignore
+            """
                 elif str(archived) == "False": archived == False
                 else : raise TypeError("archived argument accepts only boolean expression \"True\" or \"False\"")
             else : raise TypeError("archived argument accepts only boolean expression \"True\" or \"False\" ")
@@ -194,7 +207,9 @@ class ChannelModeration(commands.Cog):
         raise NotImplementedError("This feature is not implemented yet")
         
     @channel_group.command(name = "clear", description = "Clear a channel")   # type: ignore
-    async def clear(self, ctx:ApplicationContext, ch:str, n:Option(int, "Number of messages to clear", default = 100, required = False)):
+    async def clear(self, ctx:ApplicationContext, 
+                    n:Option(int, "Number of messages to clear", default = 100, required = False),  # type: ignore
+                    name:Option(str, "Channel name", required = False)):                            # type: ignore
         """
             Limitations:
                 - The number of messages to clear must be an integer between 1 and 1000.
@@ -202,21 +217,20 @@ class ChannelModeration(commands.Cog):
         """
 
         MIN = 1
-        MAX = 1000
+        MAX = 999
 
         modUtils = ModerationUtils()
         interaction = ctx.interaction
         func = ModerationUtils.fetch_function_name(self.clear)
-        channel = utils.get(interaction.guild.channels, name = ch)
+        channel = utils.get(interaction.guild.channels, name = name) if name else ctx.channel       # type: ignore
 
         try:
-            if not channel: raise ExceptionHandler(f"Channel '{ch}' does not exist.")
             if n < MIN or n > MAX: raise ExceptionHandler(f"Choose an integer between {MIN}-{MAX}")
 
         except ExceptionHandler as e:
             await modUtils.create_error_entry(ctx, e)
 
         else:
-            await channel.purge(limit=n)
-            await modUtils.create_log_entry(ctx, function_name=func, n=n)
-            await ctx.respond(f"Cleared {n} messages from the channel.", ephemeral=True)
+            await channel.purge(limit=n)                                                            # type: ignore
+            await modUtils.create_log_entry(ctx, function_name=func, n=n)                           # type: ignore
+            await ctx.respond(f"Cleared {n} messages from the {channel.mention}.", ephemeral=True)  # type: ignore
