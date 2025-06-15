@@ -95,7 +95,7 @@ class ModerationUtils(object):
           
 
         try:
-            if not channel: raise ResourceNotFoundError(f"Channel \"**{log_channel}**\" does not exists")
+            if not channel: raise ResourceNotFoundError(f"Channel \"**{log_channel}**\" does not exist")
 
         except ResourceNotFoundError:
             permissions: Dict[str, PermissionOverwrite] = {}
