@@ -107,21 +107,20 @@ class ModerationUtils(object):
 
         finally:
             dictionary:Dict[str, Any] = {}
+            if channel:
+                function_name = self.handle_string(function_name)
+                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch  else 'Unknown '} channel."#   type: ignore
 
             if member:
                 dictionary["title"] = f"**{member.name}** has been {function_name} by {author}"
                 dictionary["message"] = f"*{reason}*.\n\n User has been notified by a direct message."    
             
-            if channel:
-                function_name = self.handle_string(function_name)
-
-                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch  else 'Unknown '} channel."#   type: ignore
             embed = self.base_embed.warning(dictionary)
 
             await channel.send(embed=embed)                                                                                         #   type: ignore
 
-    @staticmethod
-    async def create_error_entry(ctx:ApplicationContext | Interaction, e:ExceptionHandler) -> None:
+
+    async def create_error_entry(self,ctx:ApplicationContext | Interaction, e:ExceptionHandler) -> None:
         """
             This method is used to log errors that occur during command execution.
 
@@ -155,14 +154,11 @@ class ModerationUtils(object):
                 - Exception: If the member cannot be sent a direct message.
             This method constructs a message based on the action taken and sends it to the member.
         """
-
-        member_message= ""
-        server = f"**{ctx.guild.name if ctx.guild else "the server"}**"
+        server = f"**{ctx.guild.name if ctx.guild else "The Server"}**"
+        member_message = f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {server}.\n\n"
+        
 
         match(action):  #   type: ignore
-
-            case "ban":
-                member_message = f"You have been banned from {server} as a consequence of :\n*{reason}*.\n\n"
 
             case "sush":
                 member_message = f"You will not be able to use {server}'s channels for {time}s as a consequence of :\n*{reason}*.\n\n"
@@ -171,12 +167,12 @@ class ModerationUtils(object):
                 member_message = "Your sush has been lifted.\n\n"
 
             case _:
-                member_message = f"You have been {action}ed by an moderator, as a consequence of :\n*{reason}*.\n\n"
+                member_message = f"You have been {action} by an moderator, as a consequence of :\n*{reason}*.\n\n"
 
-        if ctx.guild.rules_channel : 
+        if ctx.guild.rules_channel:
             member_message += f"Please read the guidelines in **{ctx.guild.rules_channel.mention}** for more information.\n"
     
-        await member.send(f"Greetings, **{member.name}**.\nYou recieve this notification, because you're a member of {server}.\n\n{member_message}Thank you for your patient and understanding\n Sincerely Moderation team")  #   type: ignore
+        await member.send(f"{member_message}Thank you for your patient and understanding\n have a glorious day further, The Moderation team.")  #   type: ignore
 
     async def create_channel(self, name:str, interaction:Interaction, channel_type:str, topic:str, perm:Dict[Role | Member, PermissionOverwrite], nsfw:bool = False, category:Optional[str] = None) -> None:
         
@@ -306,7 +302,7 @@ class ModerationUtils(object):
                 The cleaned-up string.
         """
         match(string):
-            case "clear":
+            case "sush" | "lift" | "ban" | "warn" | "kick" | "clear":
                 string = f"{string}ed"
             case _: 
                 string = f"{string}d"
