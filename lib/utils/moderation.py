@@ -103,7 +103,7 @@ class ModerationUtils(object):
             permissions['Admins'] = PermissionOverwrite(view_channel=True, send_messages=False)
             permissions['Moderators'] = PermissionOverwrite(view_channel=True, send_messages=False)
             permissions[interaction.guild.default_role] = PermissionOverwrite(view_channel=False, send_messages=True)           #   type: ignore
-            self.create_channel(name = name, interaction=interaction, channel_type = "text", perms = permissions, topic = "This is the auditlog channel for the server. All moderation actions will be logged here.", category = "Moderator")  #   type: ignore
+            self.create_channel(name = log_channel, interaction=interaction, channel_type = "text", perms = permissions, topic = "This is the auditlog channel for the server. All moderation actions will be logged here.", category = "Moderator")  #   type: ignore
 
         finally:
             dictionary:Dict[str, Any] = {}
