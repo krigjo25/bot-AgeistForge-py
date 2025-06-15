@@ -1,3 +1,4 @@
+#   Copyright (C) 2023  Kristoffer Gjøsund <krigjo25@outook.com>
 from discord import  Colour, Embed
 
 import datetime
