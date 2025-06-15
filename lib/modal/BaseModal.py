@@ -69,7 +69,7 @@ class ModalBase(Modal):
         """
         Placeholder for forum modal handling.
         """
-        variable = self.title.lower().split('-') if isinstance(list, self.title) else None
+        variable = self.title.lower().split('-') if isinstance(self.title, list) else None
 
         ch = utils.get(interaction.guild.channels, name= variable[1], type = ChannelType.forum) #   type: ignore
         threads = utils.get(ch.threads, name = data.get("title")) if ch else None               #   type: ignore
