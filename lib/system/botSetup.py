@@ -40,7 +40,7 @@ class DiscordSetup():
         #self.intents.dm_messages = True                     #  Allows the bot to send messages in direct messages only (message_edit, message_delete, cached_messages, get_message, reaction_add, reaction_remove, )
         #self.intents.dm_reactions = True                    #  Allow the bot to react in direct messages only (reaction_add, reaction_remove, reaction_clear)
         #self.intents.guild_typing = True                    #   Allows the bot to indicate a typing indicatior inside the Guild (message.content, embeds, attatchments, message components)
-        #self.intents.guild_messages = True                     #   Allows the bot to send messages inside guild only (message_edit, message_delete, cached_messages, get_message, reaction_add, reaction_remove, )
+        #self.intents.guild_messages = True                  #   Allows the bot to send messages inside guild only (message_edit, message_delete, cached_messages, get_message, reaction_add, reaction_remove, )
         #self.intents.guild_reactions = True                 #   Allows the bot to add reactions with-in the guild  (reaction_add, reaction_remove, reaction_clear)
         
         #   Miscellaneous Events
