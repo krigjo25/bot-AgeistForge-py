@@ -57,7 +57,15 @@ class ModerationUtils(object):
         if member.top_role >= interaction.user.top_role : 
             raise AuthorizationError("You cannot moderate this member, because they have a higher role than you")                                                         # type: ignore
     
-    async def create_log_entry(self, interaction:Interaction | ApplicationContext, reason:Optional[str] = None, member:Optional[Member] = None, function_name:Optional[str] = None, n: Optional[int] = 0, name:Optional[str] = "auditlog"):
+    async def create_log_entry(self, 
+                               interaction:Interaction | ApplicationContext, 
+                               
+                               reason:Optional[str] = None, 
+                               ch: Optional[str] = "Unknown",
+                               member:Optional[Member] = None, 
+                               function_name:Optional[str] = None, 
+                               n: Optional[int] = 0, 
+                               log_channel:Optional[str] = "auditlog"):
         """
             Create a log entry in the auditlog channel
             This method is used to log actions taken by moderators on members.
@@ -81,13 +89,13 @@ class ModerationUtils(object):
         if isinstance(interaction, ApplicationContext):
             interaction = interaction.interaction
 
-        ch = interaction.channel
-        author = interaction.user.name                                                                                          #   type: ignore
-        
-        channel = utils.get(interaction.guild.channels, name = name)                                                            #   type: ignore
+        author = interaction.user.name                                                                  #   type: ignore
+        channel = utils.get(interaction.guild.channels, name = log_channel)                             #   type: ignore
+        ch = utils.get(interaction.guild.channels, name = ch) if isinstance(ch, str) else 'Unknown'     #   type: ignore
+          
 
         try:
-            if not channel: raise ResourceNotFoundError("Channel \"**{name}**\" does not exists")
+            if not channel: raise ResourceNotFoundError(f"Channel \"**{log_channel}**\" does not exists")
 
         except ResourceNotFoundError:
             permissions: Dict[str, PermissionOverwrite] = {}
@@ -104,12 +112,12 @@ class ModerationUtils(object):
                 dictionary["title"] = f"**{member.name}** has been {function_name} by {author}"
                 dictionary["message"] = f"*{reason}*.\n\n User has been notified by a direct message."    
             
-            if ch:
+            if channel:
                 match(function_name):
                     case _: 
                         function_name = f"{function_name}d"
 
-                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch.name != "Unknown" else ch.name} channel."#   type: ignore
+                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch  else 'Unknown '} channel."#   type: ignore
             embed = self.base_embed.warning(dictionary)
 
             await channel.send(embed=embed)                                                                                         #   type: ignore
@@ -128,6 +136,7 @@ class ModerationUtils(object):
                 a Contextual error message to the user.
         """
         logger.error(f"An {e.__class__.__name__} Occured: {e.message}")
+
         await ctx.respond(f"An {e.__class__.__name__} Occured: {e.message}\nPlease report if you think this is a mistake '**/community bug-report**'\n**Errors are Saved in the bot, but not supervised.**", ephemeral=True)  #   type: ignore
 
     @staticmethod
