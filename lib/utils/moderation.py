@@ -1,6 +1,6 @@
 
 #   Python Repositories
-
+import datetime
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
 load_dotenv()
@@ -11,7 +11,7 @@ from discord import utils, Member, Interaction, PermissionOverwrite, Application
 
 from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import UtilsWatcher
-from lib.utils.exceptions import ResourceNotFoundError, ExceptionHandler, SelfReferenceError, AuthorizationError, TypeErrorHandler
+from lib.utils.exceptions import ResourceNotFoundError, ExceptionHandler, SelfReferenceError, AuthorizationError, TypeErrorHandler, InvalidDurationError
 
 logger = UtilsWatcher(name="Moderation Utils")
 logger.file_handler()
@@ -31,7 +31,7 @@ class ModerationUtils(object):
         self.base_embed = EmbedFactory
 
     @staticmethod
-    def fetch_member_exception(interaction:Interaction, member:Member) -> None:
+    def fetch_member_exception(interaction:Interaction | ApplicationContext, member:Member) -> None:
         """
             This method checks if the member is valid for moderation actions.
             It raises exceptions if the member is not found, if the member is the same as the user, or if the member has a higher role than the user.
@@ -42,20 +42,30 @@ class ModerationUtils(object):
             Raises:
                 - ResourceNotFoundError: If the member is not found.
                 - SelfReferenceError: If the member is the same as the user.
+                - InvalidDurationError: If the member is already muted or shushed.
                 - AuthorizationError: If the member has a higher role than the user.
+                
 
             Returns:
                 None
         """
         
+        if isinstance(interaction, ApplicationContext):
+            interaction = interaction.interaction
+        
         if not member: 
             raise ResourceNotFoundError(f"Member not found")
 
         if member == interaction.user: 
-            raise SelfReferenceError(" You cannot moderate yourself")
+            raise SelfReferenceError("You cannot moderate yourself")
 
-        if member.top_role >= interaction.user.top_role : 
+        if member.top_role >= interaction.user.top_role :  #   type: ignore
             raise AuthorizationError("You cannot moderate this member, because they have a higher role than you")                                                         # type: ignore
+
+        if member.communication_disabled_until:
+            if member.communication_disabled_until > datetime.datetime.now():
+                duration = member.communication_disabled_until - datetime.datetime.now()
+                raise InvalidDurationError(f"Could not sush **{member}**. **{member}** is already shushed for {duration}s") 
     
     async def create_log_entry(self, 
                                interaction:Interaction | ApplicationContext, 
