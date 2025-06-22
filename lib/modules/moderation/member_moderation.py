@@ -112,7 +112,7 @@ class MemberModeration(commands.Cog):
                    reason:Option(str, "Provide A reason to kick the member", required = True)) -> None:     #   type: ignore
 
         mod_utils = ModerationUtils()
-        reason = str(reason).strip() if reason else #   type: ignore
+        reason = str(reason).strip()                                                                        #   type: ignore
 
         try : mod_utils.fetch_member_exception(ctx, member)  #   type: ignore
         except (SelfReferenceError, Forbidden) as e : await mod_utils.create_error_entry(ctx, e)            #   type: ignore
