@@ -65,10 +65,10 @@ class MemberModeration(commands.Cog):
 
     @member.command(name = "sush", description="Mute a community member for their behavior")            #   type: ignore
     async def sush(self, ctx:ApplicationContext, member:Member, #   type: ignore
-                   time:Option(str, "(1s)ecound / (1m)inute / (1h)our / (1d)ay", required = True),  #   type: ignore
-                   *, reason:Option(str, "Provide a reason to mute the member", required = True)):  #   type: ignore
+                   time:Option(str, "(1s)ecound / (1m)inute / (1h)our / (1d)ay", required = True),      #   type: ignore
+                   *, reason:Option(str, "Provide a reason to mute the member", required = True)):      #   type: ignore
 
-        WEEK = float(604800)  #   1 week in seconds
+        WEEK = float(604800)
         mod_utils = ModerationUtils()
         time = int(hf.parse_timespan(time))                                                                                      #   type: ignore
        
