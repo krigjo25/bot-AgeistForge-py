@@ -1,17 +1,17 @@
-#       Administrator
-#        Copyright (C) 2023  Kristoffer Gjøsund
-
-#        *   Creation Date   : 21.02-23
-#        *   Last update     :
-#        *   Version         : 0.1.0 Beta
+#   Administrator Module
 
 #   Python Repositories
 import datetime
-from typing import Annotated
+from typing import Annotated, List, Dict, Tuple
+
+#   Discord Repositories
+from discord import Embed
 from discord.ext import  commands
-from discord.embeds import Embed, Colour
 from discord import utils, Option, ApplicationContext, SlashCommandGroup, Permissions, Member
 
+#   Local Repositories
+from lib.utils.moderation import ModerationUtils
+from lib.utils.embed import EmbedFactory
 from lib.utils.logger_config import AdminWatcher
 from lib.utils.exceptions import ResourceNotFoundError
 
@@ -22,65 +22,51 @@ class Administrator(commands.Cog):
     def __init__(self, bot:commands.Bot):
 
         self.bot = bot
-        self.embed = Embed(color=Colour.dark_red())
         self.now = datetime.datetime.now().strftime('%a, %d.%b-%y')
+        self.base_embed = EmbedFactory
 
-    admin_group = SlashCommandGroup(name = "ban", description = "Server Administrator", default_member_permissions = Permissions(administrator = True))
+    admin_group = SlashCommandGroup(name = "ban", description = "Server Administrator",
+                                    default_member_permissions = Permissions(administrator = True))
 
-    @admin_group.before_invoke #   type: ignore
-    async def CheckModChannel(self, ctx:ApplicationContext):
-        pass
-
-    @admin_group.after_invoke #   type: ignore
-    async def admin_command_after(self, ctx:ApplicationContext):
-
-        
-        #   Clearing embeds
-        self.embed.clear_fields()
-        self.embed.remove_image()
-        self.embed.remove_author()
-        self.embed.remove_footer()
-        self.embed.description = ""
-        self.embed.remove_thumbnail()
-        self.embed.color = Colour.dark_purple()
-
-    @admin_group.command()  #   type: ignore
+    @admin_group.command(name ="list")                                                                                   #   type: ignore
     async def list(self, ctx:ApplicationContext):
 
-        #   Initializing a list
-        banned = []
+        banned:List[Dict[str,str]] = []
+
 
         try:
-
-            #   Iterating over the ctx.guild bans
            async for entry in ctx.guild.bans():
 
                 dictionary = {  "name": entry.user.name,
-                                "discriminator": entry.user.discriminator,
-                                "reason": entry.reason}
-
+                              "discriminator": entry.user.discriminator,
+                              "reason": entry.reason}
                 banned.append(dictionary)
 
-        except Exception as e : 
-            logger.exception(f"An error occured while fetching the list of banned members: {e}")
-            print(e)
-        else:
+        except Exception as e :
+            logger.error(f"An error occurred while fetching banned members: {e}")
+            dictionary = {"title": "Error", "message": f"An error occurred while fetching banned members: {e}"}
+            embed = EmbedFactory().warning(dictionary=dictionary)
+            await ctx.respond(embed=embed, ephemeral=True)
+            return
 
-            #   Prepare the ebeded message
-            self.embed.title = 'List of banned server members'
-            self.embed.description =' User name & discriminator | Reason'
-            self.embed.color = Colour.dark_red()
+
+        else:
+            dictionary: Dict[str, str] = {}
+            dictionary["title"] = "List of banned server members :sto"
 
             if banned:
 
-                for i in banned: 
-                    self.embed.add_field(name= f'{i["name"]}#{i["discriminator"]}', value = f'{i["reason"]}', inline = True)
+                dictionary["message"] = f"User name & discriminator | Reason.\tTotal banned users {len(banned)}"
 
+                embed = EmbedFactory().warning(dictionary = dictionary, fields=tuple(banned))
 
-            else: self.embed.description = "Noone banned yet, Hurray :party:"
+            else: 
+                dictionary["message"] = f"No one banned yet, :partying_face: Hurray :partying_face:\nTotal banned users {len(banned)}\n== End of List =="
+                
+                embed = EmbedFactory().all_clear(dictionary)
 
-            self.embed.add_field(name= f'Total banned users {len(banned)}\n== End of List ==', value = ':-)', inline = False)
-            await ctx.send(embed=self.embed)
+            await ctx.respond(embed=embed, ephemeral=True)
+            
 
     @admin_group.command()  #   type: ignore
     async def member(self, ctx:ApplicationContext, member:Member, *, reason:Annotated[str, Option(str, "Reason for the ban", required=True)]):
@@ -101,20 +87,20 @@ class Administrator(commands.Cog):
 
         except ResourceNotFoundError as e :
 
-            self.embed.color = Colour.dark_red()
+            """self.embed.color = Colour.dark_red()
             self.embed.title =f"An Exception Occured"
             self.embed.description = f"{e.status_code} - {e.message}\n"
-            await ctx.send(embed = self.embed)
+            await ctx.send(embed = self.embed)"""
 
         else:
 
             #   Log the ban
-            self.embed.color = Colour.dark_red()
+            """self.embed.color = Colour.dark_red()
             self.embed.description = f"due to {reason}"
             self.embed.timestamp = datetime.datetime.now()
             self.embed.title = f'{member} has been banned by {ctx.author}'
             
-            await ch.send(embed=self.embed)
+            await ch.send(embed=self.embed)"""
 
             #   Notify the user about the ban & ban the member
             message = f'the Administrator Team has decided to probhid you for using  **{ctx.guild.name}** \n \n Due to :\n **{reason}**'
@@ -138,22 +124,20 @@ class Administrator(commands.Cog):
         except Exception as e:
 
             #   Prepare emed message
-            self.embed.color = Colour.dark_red()
+           """ self.embed.color = Colour.dark_red()
             self.embed.title = f"An Exception Occured"
             self.description = f"{e}, try again"
-            await ctx.send(embed = self.embed)
+            await ctx.send(embed = self.embed)"""
 
-            del ch, member
-            return
 
         else:
             
             #   Log the unban
-            self.embed.color = Colour.dark_red()
+            """self.embed.color = Colour.dark_red()
             self.embed.timestamp = datetime.datetime.now()
             self.embed.title = f"{member.name} has been unbanned by {ctx.author.name}"
 
-            await ch.send(embed=self.embed)
+            await ch.send(embed=self.embed)"""
 
             #  Unban the given member
             async for entry in ctx.guild.bans():
@@ -174,8 +158,6 @@ class Administrator(commands.Cog):
         await ctx.send("Initiating bot restart...", ephemeral=True) #   type: ignore
         logger.critical(f"'{ctx.author}' initiated self destruct butten !")
 
-        # This will gracefully disconnect the bot from Discord.
-        # Once disconnected, the Python script will exit.
         await self.bot.close()
 
 
