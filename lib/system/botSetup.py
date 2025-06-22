@@ -9,7 +9,6 @@ from lib.system.faq import FrequentlyAskedQuestions
 
 #   Moderation libraries
 from lib.modules.moderation.administrator import Administrator
-from lib.modules.moderation.role_moderation import RoleModeration
 from lib.modules.moderation.member_moderation import MemberModeration
 from lib.modules.moderation.channel_moderation import ChannelModeration
 
