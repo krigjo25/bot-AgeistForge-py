@@ -1,7 +1,7 @@
 
 #   Python Repositories
 import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -119,7 +119,7 @@ class ModerationUtils(object):
             dictionary:Dict[str, Any] = {}
             if channel:
                 function_name = self.handle_string(function_name)
-                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch  else 'Unknown '} channel."#   type: ignore
+                dictionary['title'] = f"**{author}** has {function_name} {f"{n} line(s) in" if n else ""}, {ch.mention if ch  else 'Unknown '} channel."    #   type: ignore
 
             if member:
                 dictionary["title"] = f"**{member.name}** has been {function_name} by {author}"
@@ -207,39 +207,39 @@ class ModerationUtils(object):
                 
                 case "text":
                     print(category)
-                    await interaction.guild.create_text_channel(
+                    await interaction.guild.create_text_channel(                            #   type: ignore
                         nsfw = nsfw,
                         name = name,
                         topic = topic,
                         overwrites = perm,
-                        reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = category,    #   type: ignore
+                        reason = f"Channel '{name}' created by {interaction.user.name}",    #   type: ignore
+                        category = category,                                                #   type: ignore
                     )
 
                 case "voice":
-                    await interaction.guild.create_voice_channel(
+                    await interaction.guild.create_voice_channel(                           #   type: ignore
                         name = name,
                         overwrites = perm,
-                        reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category)
+                        reason = f"Channel '{name}' created by {interaction.user.name}",    #   type: ignore
+                        category = utils.get(interaction.guild.categories, name=category)   #   type: ignore
                     )
                 
                 case "forum":
-                    await interaction.guild.create_forum_channel(
+                    await interaction.guild.create_forum_channel(                           #   type: ignore 
                         nsfw = nsfw,
                         name = name,
                         topic = topic,
                         overwrites = perm,
-                        reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category),    #   type: ignore
+                        reason = f"Channel '{name}' created by {interaction.user.name}",    #   type: ignore
+                        category = utils.get(interaction.guild.categories, name=category),  #   type: ignore
                     )
                 
                 case "stage":
-                    await interaction.guild.create_stage_channel(
+                    await interaction.guild.create_stage_channel(                           #   type: ignore
                         topic = topic,
                         overwrites = perm,
-                        reason = f"Channel '{name}' created by {interaction.user.name}",                            #   type: ignore
-                        category = utils.get(interaction.guild.categories, name=category))    #   type: ignore
+                        reason = f"Channel '{name}' created by {interaction.user.name}",    #   type: ignore
+                        category = utils.get(interaction.guild.categories, name=category))  #   type: ignore
 
                 case _:
                     raise TypeErrorHandler(f"Channel type '{channel_type}' is not recognized or implemnted yet. Please use one of the following: Text, Voice, Forum, Stage, News.")
@@ -262,7 +262,7 @@ class ModerationUtils(object):
             elif len(category) > 100: raise ExceptionHandler("Category name can not be longer than 100 characters")
 
         except ExceptionHandler as e:
-            embed = EmbedFactory.exception(e)
+            embed = EmbedFactory.error(e)
 
             ctx.respond(embed = embed)
 
@@ -284,7 +284,17 @@ class ModerationUtils(object):
         raise NotImplementedError("This method is not implemented yet, please use the Channel class to create a thread")
     
     async def handle_permissions(self, perm:str)-> PermissionOverwrite:
-        pass
+        """
+            Handle the permissions for the channel.
+            This method is used to create a PermissionOverwrite object for the channel.
+            Parameters:
+                - perm: The string containing the permissions to be set.
+            Returns:
+                A PermissionOverwrite object with the specified permissions.
+        """
+        overwrite: PermissionOverwrite = PermissionOverwrite()  #   type: ignore
+
+        return overwrite
 
     @staticmethod
     def fetch_function_name(name:SlashCommand) -> str:
