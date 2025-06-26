@@ -9,7 +9,7 @@ load_dotenv()
 
 from typing import Optional, Union
 
-from lib.core.APIConfig import APIConfig
+from lib.core.api_configurations import APIConfig
 from lib.utils.logger_config import APIWatcher
 
 logger = APIWatcher(name='Github-API')
@@ -40,7 +40,7 @@ class GithubAPI(APIConfig):
         #   Check for duplicated issues before making a request
         try:
             
-            self._make_request_(endpoint, self.head, self.POST, data)
+            self.make_request(endpoint, self.head, self.POST, data)
 
         except Exception as e:
             logger.error(f"An error occurred while posting the issue: {e.__class__.__name__}\nMessage from API: {self.API_URL}{endpoint}\n{e}")

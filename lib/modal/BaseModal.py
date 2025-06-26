@@ -126,7 +126,7 @@ class ModalBase(Modal):
         issue = {k: v for k, v in issue.items() if v is not None}  #   Filter out None values
 
         try:
-            response = api._make_request_(f"{api.API_URL}/user/repos", head=api.head)  #   type: ignore
+            response = api.make_request(f"{api.API_URL}/user/repos", self.API_KEY=api.head)  #   type: ignore
 
             for i in response:
                 if str(data['app']).lower() in str(i['name']).lower():
