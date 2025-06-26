@@ -26,12 +26,11 @@ class APIConfig(object):
         self.PATCH = PATCH
         self.DELETE = DELETE
 
-    def make_request(self, method: Optional[str] = "GET", data:Optional[Dict[str, Union[str, list[str]]]] = None, timeout: Optional[int] = 30) -> requests.Response:
+    def make_request(self, method: Optional[str] = "GET", data:Optional[Dict[str, Union[str, list[str]]]] = {}, timeout: Optional[int | float] = 30) -> requests.Response:
 
         #   Initialize the start time
         start = perf_counter()
-        playload = json.dumps(data) if data else None        
-        API_request.info(f"Attempting to '{method}' from {self.API_URL}\n")
+        playload = json.dumps(data) if data else None
 
         try:
             match str(method).upper():
@@ -51,12 +50,12 @@ class APIConfig(object):
                     raise NotImplementedError(f"{method} Not Implemented")
 
                 case _:
-                    raise ValueError(f"Unsupported HTTP method: '{method}'")
+                    raise RequestException(f"Unsupported HTTP method: '{method}'")
 
             response.raise_for_status() #   Raise an HTTPError if not a 2xx response
             
 
-        except (HTTPError, ConnectionError, Timeout, RequestException) as e:
+        except (HTTPError, ConnectionError, Timeout, RequestException, NotImplementedError, TypeError, RequestException) as e:
             data_text = ""
             if data:
                 data_text = f"{self.POST}ING Data : {data}"
@@ -74,6 +73,3 @@ class APIConfig(object):
             API_request.critical(f"Time elapsed: {perf_counter()-start}\n")
             
             return response
-
-    def calculate_n(self, endpoint: str, header:dict[str, str]): pass
-        #return self.make_request(self.API_URL f"{self.API_URL}{endpoint}", self.API_KEY = header)
