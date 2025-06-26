@@ -17,7 +17,7 @@ API_request.file_handler()
 
 class APIConfig(object):
 
-    def __init__(self, URL:Optional[str], KEY:Optional[str] = None, GET:str = "GET", POST:str = "POST", PUT:str='PUT', PATCH:str='PATCH', DELETE:str = 'DELETE') -> None:
+    def __init__(self, URL:Optional[str], KEY:Optional[Dict[str,str]] = {}, GET:str = "GET", POST:str = "POST", PUT:str='PUT', PATCH:str='PATCH', DELETE:str = 'DELETE') -> None:
         self.GET = GET
         self.PUT = PUT
         self.POST = POST
@@ -54,10 +54,7 @@ class APIConfig(object):
                     raise ValueError(f"Unsupported HTTP method: '{method}'")
 
             response.raise_for_status() #   Raise an HTTPError if not a 2xx response
-
-            API_request.info(f"'{self.API_URL}{self.API_URL}' Returned Ok.\n")
-            API_request.critical(f"Time elapsed: {perf_counter()-start}\n")
-            return response.json() if response.content else None        #   type: ignore
+            
 
         except (HTTPError, ConnectionError, Timeout, RequestException) as e:
             data_text = ""
@@ -66,12 +63,17 @@ class APIConfig(object):
 
             API_request.error(f"Headers: {self.API_KEY}\nAPI Endpoint: {self.API_URL}\n")
             API_request.error(f"An Exception Occurred: {e.__class__.__name__}\n")
-            API_request.error(f"Message from API: {self.API_URL}\n{self.API_URL}: {e}\n{data_text}\n")
+            API_request.error(f"Message from API:\n {e}\n{data_text}\n")
             API_request.critical(f"Time elapsed: {perf_counter()-start}\n")
                         
             raise e
+        
         else:
-            return 
+
+            API_request.info(f"'{self.API_URL}{self.API_URL}' Returned Ok.\n")
+            API_request.critical(f"Time elapsed: {perf_counter()-start}\n")
+            
+            return response
 
     def calculate_n(self, endpoint: str, header:dict[str, str]): pass
         #return self.make_request(self.API_URL f"{self.API_URL}{endpoint}", self.API_KEY = header)
