@@ -26,21 +26,21 @@ class GithubAPI(APIConfig):
         self.GET = GET
         self.PUT = PUT
         self.POST = POST
-        self.API_URL = URL
+        self.api_url = URL
         self.API_KEY = KEY
         self.PATCH = PATCH
         self.DELETE = DELETE
-        self.head = {'Content-Type': 'application/json','Authorization': f"{self.API_KEY}"}
 
     async def post_issue(self, data:dict[str, Union[str, list[str]]], endpoint:str) -> None:
         """
             Posting an issue to the repository
             API : https://api.github.com/repos/{owner}/{repo}/issues
         """
+        self.API_URL = f"{self.API_URL}{endpoint}"
         #   Check for duplicated issues before making a request
         try:
             
-            self.make_request(endpoint, self.head, self.POST, data)
+            self.handle_headers(self.POST, data)
 
         except Exception as e:
             logger.error(f"An error occurred while posting the issue: {e.__class__.__name__}\nMessage from API: {self.API_URL}{endpoint}\n{e}")
