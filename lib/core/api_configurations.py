@@ -17,7 +17,7 @@ API_request.file_handler()
 
 class APIConfig(object):
 
-    def __init__(self, URL:Optional[str], KEY:Optional[Dict[str,str]] = {}, GET:str = "GET", POST:str = "POST", PUT:str='PUT', PATCH:str='PATCH', DELETE:str = 'DELETE') -> None:
+    def __init__(self, URL:Optional[str], KEY:Optional[str] = "", GET:str = "GET", POST:str = "POST", PUT:str='PUT', PATCH:str='PATCH', DELETE:str = 'DELETE') -> None:
         self.GET = GET
         self.PUT = PUT
         self.POST = POST
@@ -26,19 +26,37 @@ class APIConfig(object):
         self.PATCH = PATCH
         self.DELETE = DELETE
 
-    def make_request(self, method: Optional[str] = "GET", data:Optional[Dict[str, Union[str, list[str]]]] = {}, timeout: Optional[int | float] = 30) -> requests.Response:
+    def handle_headers(self, method:str = "GET", data:Dict[str,Union[str, list[str]]] = {}, timeout: int | float = 30) -> requests.Response:
+        header: Dict[str, str] = {}
+
+        # Handle the headers for the request
+        for key, value in data.items():
+            if isinstance(value, list):
+                header[key] = ', '.join(value)
+
+            if not 'Content-Type' in data:
+                header['Content-Type'] = 'application/json'
+
+            if self.API_KEY and 'Authorization' not in data:
+                header['Authorization'] = f"{self.API_KEY}"
+
+
+        return self._make_request_(method, header, timeout)
+    
+    def _make_request_(self, method:str, data:Dict[str,str], timeout: int | float) -> requests.Response:
 
         #   Initialize the start time
         start = perf_counter()
         playload = json.dumps(data) if data else None
 
+
         try:
             match str(method).upper():
                 case self.GET:
-                    response = requests.get(self.API_URL, timeout=timeout, headers=self.API_KEY)
-            
-                case self.POST: 
-                    response = requests.request(f"{self.POST}",f"{self.API_URL}{self.API_URL}", data = playload, timeout=timeout, headers=self.API_KEY)
+                    response = requests.get(self.API_URL, timeout=timeout, headers=data)
+
+                case self.POST:
+                    response = requests.request(f"{self.POST}", f"{self.API_URL}", data=playload, timeout=timeout, headers=data)
 
                 case self.PUT:
                     raise NotImplementedError(f"{method} Not Implemented")
